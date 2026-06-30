@@ -12,10 +12,13 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
+  const { data: alertas } = await supabase.from('alertas_estoque').select('id')
+  const totalAlertas = alertas?.length ?? 0
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="flex">
-        <Sidebar />
+        <Sidebar alertasEstoque={totalAlertas} />
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>

@@ -16,11 +16,9 @@ export default async function DashboardLayout({
   const totalAlertas = alertas?.length ?? 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex">
-        <Sidebar alertasEstoque={totalAlertas} />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
+    <div className="min-h-screen bg-slate-50 flex">
+      <Sidebar alertasEstoque={totalAlertas} />
+      <main className="flex-1 p-8 overflow-auto">{children}</main>
     </div>
   )
 }

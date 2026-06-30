@@ -1,7 +1,9 @@
+import { FormularioLogin } from '@/components/auth/FormularioLogin'
+
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <p className="text-slate-500">Módulo de login — a implementar</p>
+    <div className="min-h-screen flex flex-1 items-center justify-center bg-slate-50 p-4">
+      <FormularioLogin />
     </div>
   )
 }

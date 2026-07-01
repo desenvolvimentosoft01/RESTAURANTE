@@ -1,37 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ERP Restaurante
 
-## Getting Started
+Sistema de gestão completo para restaurantes, desenvolvido com Next.js 15 e Supabase.
 
-First, run the development server:
+## Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **PDV / Venda Balcão** — cardápio com categorias, carrinho e finalização de pedidos
+- **Pedidos iFood** — acompanhamento e atualização de status de pedidos externos
+- **Produtos** — cadastro, categorias e controle de estoque por produto
+- **Financeiro** — contas a pagar e a receber com alertas de vencimento
+- **Relatórios** — vendas por período, contas e produtos com filtros e impressão seletiva
+- **Dashboard** — resumo financeiro do dia, pedidos em andamento e alertas de estoque
+
+## Tecnologias
+
+- [Next.js 15](https://nextjs.org) (App Router, Server Components)
+- [Supabase](https://supabase.com) (PostgreSQL + Auth + Realtime)
+- [Shadcn/ui](https://ui.shadcn.com) + [Tailwind CSS](https://tailwindcss.com)
+- [Zustand](https://zustand-demo.pmnd.rs) — estado global do PDV e sistema de abas
+- [Recharts](https://recharts.org) — gráficos nos relatórios
+- [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) — formulários e validação
+
+## Configuração
+
+### 1. Variáveis de ambiente
+
+Crie o arquivo `.env.local` na raiz do projeto (nunca commitar este arquivo):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_anon_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> A `ANON_KEY` é segura para o browser. Nunca adicione a `SERVICE_ROLE_KEY` com prefixo `NEXT_PUBLIC_`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Banco de dados
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Execute o script de migração no SQL Editor do Supabase:
 
-## Learn More
+```
+supabase/migrations/000_schema_completo.sql
+```
 
-To learn more about Next.js, take a look at the following resources:
+Isso criará todas as tabelas, views, funções e políticas RLS necessárias.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Instalar dependências e rodar
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Acesse [http://localhost:3000](http://localhost:3000).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estrutura de pastas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# RESTAURANTE
+```
+app/
+  (auth)/          # Páginas públicas (login)
+  (dashboard)/     # Páginas protegidas
+  api/             # Route Handlers (webhook iFood, estoque)
+components/
+  erp/             # Componentes TDI (Produtos, Categorias)
+  layout/          # Sidebar, TopBar, TabBar
+  pdv/             # Componentes da venda balcão
+  produtos/        # Relatório de produtos
+  relatorios/      # Relatórios de vendas e contas
+  ui/              # Shadcn/ui (não editar manualmente)
+hooks/             # Zustand (carrinho, abas)
+lib/
+  supabase/        # Client browser e server SSR
+types/
+  database.ts      # Tipos TypeScript do schema Supabase
+supabase/
+  migrations/      # Scripts SQL
+```

@@ -1,25 +1,23 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+
+import { Eraser, FileText, FilePlus, List, Pencil, Save, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  FilePlus, Save, Eraser, X, Pencil, Trash2, List, FileText,
-} from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+
 import { formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import type { Produto, Categoria } from '@/types/database'
 
 const schema = z.object({
@@ -140,7 +138,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
 
   return (
     <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden flex flex-col">
-      {/* Abas TDI */}
+      {/* Padrão TDI (Tela De Informação): Grade + Cadastro na mesma tela.
+          Evita navegação de páginas e mantém o contexto do registro selecionado. */}
       <div className="flex border-b border-slate-300 bg-slate-50">
         <button
           onClick={() => setAba('grade')}
@@ -290,7 +289,11 @@ export function TelaProdutos({ produtos, categorias }: Props) {
               <Textarea placeholder="Descrição opcional" rows={2} {...register('descricao')} className="resize-none" />
             </div>
 
-            {/* Linha 3 — Switches */}
+            {/* Switch usa defaultChecked (não controlled) porque o react-hook-form
+                gerencia o valor via setValue/onCheckedChange. A prop key força
+                remount ao trocar de registro, garantindo que o estado visual do
+                Switch reflita o produto carregado — sem key o DOM reutiliza o
+                elemento e o toggle fica no estado do produto anterior. */}
             <div className="flex items-center gap-8 bg-slate-50 rounded-lg border border-slate-200 p-4">
               <div className="flex items-center gap-2.5">
                 <Switch

@@ -1,11 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+
 import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { formatarMoeda, formatarDataCurta } from '@/lib/utils'
+
+import { formatarDataCurta, formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/server'
 import { DeletarContaBtn } from '@/components/financeiro/DeletarContaBtn'
 import { MarcarPagoBtn } from '@/components/financeiro/MarcarPagoBtn'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import type { Conta } from '@/types/database'
 
 export default async function ContasPage() {

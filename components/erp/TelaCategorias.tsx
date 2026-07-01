@@ -1,18 +1,20 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+
+import { Eraser, FileText, FilePlus, List, Pencil, Save, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { FilePlus, Save, Eraser, X, Pencil, Trash2, List, FileText } from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/client'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import type { Categoria } from '@/types/database'
 
 const schema = z.object({

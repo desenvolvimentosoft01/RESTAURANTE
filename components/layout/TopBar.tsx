@@ -1,9 +1,10 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { LogOut, Bell, ChevronRight, Home } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { Bell, ChevronRight, Home, LogOut } from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/client'
-import { usePathname } from 'next/navigation'
 
 const NOMES_ROTAS: Record<string, string> = {
   '':                         'Dashboard',

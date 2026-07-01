@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { toast } from 'sonner'
+
 import { Bike } from 'lucide-react'
-import { usePedidosRealtime } from '@/hooks/usePedidosRealtime'
+import { toast } from 'sonner'
+
 import { createClient } from '@/lib/supabase/client'
+import { usePedidosRealtime } from '@/hooks/usePedidosRealtime'
 import { CardPedido } from './CardPedido'
 import type { Pedido, StatusPedido } from '@/types/database'
 

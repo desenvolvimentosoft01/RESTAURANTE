@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
-import { formatarMoeda, formatarData } from '@/lib/utils'
-import {
-  TrendingUp, TrendingDown, Wallet, ShoppingBag,
-  Clock, ChefHat, CheckCircle, AlertTriangle
-} from 'lucide-react'
 import Link from 'next/link'
+
+import { AlertTriangle, ChefHat, CheckCircle, Clock, ShoppingBag, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+
+import { formatarData, formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/server'
 
 const STATUS_LABEL: Record<string, { label: string; cor: string; bg: string }> = {
   pendente:   { label: 'Pendente',   cor: 'text-amber-700',   bg: 'bg-amber-100' },

@@ -1,17 +1,20 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
 import { X } from 'lucide-react'
-import { useTabs } from '@/hooks/useTabs'
+
 import { cn } from '@/lib/utils'
+import { useTabs } from '@/hooks/useTabs'
 
 export function TabBar() {
   const router = useRouter()
   const pathname = usePathname()
   const { abas, abaAtiva, setAbaAtiva, fecharAba } = useTabs()
 
-  // Sincroniza a aba ativa com a rota atual
+  // Sincroniza a aba ativa com a URL porque o usuário pode navegar pelo botão
+  // Voltar do browser ou colar um link diretamente — o store não saberia disso.
   useEffect(() => {
     const abaExiste = abas.find((a) => a.href === pathname)
     if (abaExiste) {
@@ -26,9 +29,10 @@ export function TabBar() {
 
   function fechar(e: React.MouseEvent, href: string) {
     e.stopPropagation()
+    // Lê o estado via getState() em vez de closure para garantir os valores
+    // mais recentes — closures em handlers de evento podem estar stale.
     const { abas: abasAtuais, abaAtiva: ativa, fecharAba: fn } = useTabs.getState()
 
-    // Calcula para onde navegar antes de fechar
     if (href === ativa && abasAtuais.length > 1) {
       const idx = abasAtuais.findIndex((a) => a.href === href)
       const novasAbas = abasAtuais.filter((a) => a.href !== href)

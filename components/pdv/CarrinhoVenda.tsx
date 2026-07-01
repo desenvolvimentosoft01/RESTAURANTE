@@ -1,8 +1,9 @@
 'use client'
 
+import { Minus, Plus, ShoppingCart, X } from 'lucide-react'
+
 import { formatarMoeda } from '@/lib/utils'
 import { useCarrinho } from '@/hooks/useCarrinho'
-import { Minus, Plus, X, ShoppingCart } from 'lucide-react'
 
 interface Props {
   onFinalizar: () => void

@@ -1,10 +1,10 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import {
-  LayoutDashboard, ShoppingCart, Bike, UtensilsCrossed, Wallet, ChevronDown, BarChart3,
-} from 'lucide-react'
 import { useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { BarChart3, Bike, ChevronDown, LayoutDashboard, ShoppingCart, UtensilsCrossed, Wallet } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { useTabs, type Aba } from '@/hooks/useTabs'
 

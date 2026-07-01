@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { formatarMoeda } from '@/lib/utils'
+
+import { cn, formatarMoeda } from '@/lib/utils'
 import { useCarrinho } from '@/hooks/useCarrinho'
-import { cn } from '@/lib/utils'
 import type { Categoria, Produto } from '@/types/database'
 
 interface Props {

@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
-/* Forçar modo claro — ERP sempre usa tema claro independente do SO */
+/* ERP de uso interno — dark mode não está no escopo. Forçar light mode evita
+   que o shadcn/ui aplique variáveis CSS do dark mode quando o SO do operador
+   está configurado com tema escuro, o que causaria contraste errado nos cards. */
 :root {
   color-scheme: only light;
 
-  /* shadcn/ui tokens — explícitos, sem dark mode */
+  /* Tokens do shadcn/ui declarados explicitamente para não depender de @layer dark.
+     Sem isso, componentes como Card e Popover ficariam com fundo escuro em OS dark mode. */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;

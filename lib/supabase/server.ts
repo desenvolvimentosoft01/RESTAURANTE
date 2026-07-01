@@ -18,7 +18,9 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Server Component — cookies só podem ser escritos em Route Handlers/Server Actions
+            // Em Server Components o cookie store é read-only — apenas Route Handlers
+            // e Server Actions conseguem escrever. O catch silencioso é intencional:
+            // a sessão já foi renovada pelo middleware, que tem acesso de escrita.
           }
         },
       },

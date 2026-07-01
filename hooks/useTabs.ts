@@ -18,6 +18,8 @@ interface TabsStore {
 const ABA_HOME: Aba = { href: '/', label: 'Dashboard', icone: '📊' }
 
 export const useTabs = create<TabsStore>()(
+  // persist é usado para que as abas sobrevivam a um F5 — o usuário não perde
+  // o contexto de trabalho ao recarregar a página acidentalmente.
   persist(
     (set, get) => ({
       abas: [ABA_HOME],
@@ -35,12 +37,14 @@ export const useTabs = create<TabsStore>()(
 
       fecharAba: (href) => {
         const { abas, abaAtiva } = get()
-        // Não fecha a última aba
+        // Dashboard é a única aba indestruível — protege contra estado inválido
+        // onde o store ficaria sem nenhuma aba.
         if (abas.length === 1) return
         const idx = abas.findIndex((a) => a.href === href)
         const novasAbas = abas.filter((a) => a.href !== href)
 
-        // Se fechou a aba ativa, ativa a anterior (ou próxima)
+        // Ao fechar a aba ativa, ativa a imediatamente anterior para evitar
+        // que o usuário fique sem contexto visual.
         let novaAtiva = abaAtiva
         if (href === abaAtiva) {
           novaAtiva = novasAbas[Math.max(0, idx - 1)].href
@@ -52,7 +56,6 @@ export const useTabs = create<TabsStore>()(
     }),
     {
       name: 'erp-tabs',
-      // Não persiste entre sessões de forma excessiva — limpa ao abrir o sistema
       version: 1,
     }
   )

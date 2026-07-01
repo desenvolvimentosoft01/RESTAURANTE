@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Bike, ChevronRight, Clock, Store } from 'lucide-react'
 import { toast } from 'sonner'
-import { Clock, ChevronRight, Store, Bike } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+
 import { formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

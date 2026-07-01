@@ -1,14 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { BarChart3, Check, CreditCard, Printer, ShoppingBag, TrendingUp, X } from 'lucide-react'
+
 import { formatarMoeda } from '@/lib/utils'
-import { Printer, X, Check, TrendingUp, ShoppingBag, CreditCard, BarChart3 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
-} from 'recharts'
 import { FiltroRelatorio } from './FiltroRelatorio'
 import type { Pedido } from '@/types/database'
 

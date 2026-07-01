@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+
 import { formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { useCarrinho } from '@/hooks/useCarrinho'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

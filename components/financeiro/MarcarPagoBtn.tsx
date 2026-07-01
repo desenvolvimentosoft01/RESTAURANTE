@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+
+import { CheckCircle } from 'lucide-react'
+import { toast } from 'sonner'
+
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
 export function MarcarPagoBtn({ id, tipo }: { id: string; tipo: string }) {
   const [marcando, setMarcando] = useState(false)

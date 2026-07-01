@@ -1,31 +1,18 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { formatarMoeda, formatarDataCurta } from '@/lib/utils'
-import { toast } from 'sonner'
+import { useCallback, useEffect, useState } from 'react'
+
 import { format, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { toast } from 'sonner'
+
+import { formatarDataCurta, formatarMoeda } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { ProdutoMaisVendido } from '@/types/database'
 
 interface VendaDia {

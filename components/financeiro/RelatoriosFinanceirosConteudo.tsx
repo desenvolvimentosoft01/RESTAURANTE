@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Check, Minus, Printer, TrendingDown, TrendingUp, X } from 'lucide-react'
+
 import { formatarMoeda } from '@/lib/utils'
-import { Printer, TrendingUp, TrendingDown, Minus, X, Check } from 'lucide-react'
-import type { Transacao, Conta, ProdutoMaisVendido } from '@/types/database'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from 'recharts'
+import type { Conta, ProdutoMaisVendido, Transacao } from '@/types/database'
 
 interface Props {
   transacoes: Transacao[]

@@ -7,8 +7,11 @@ import { TabBar } from '@/components/layout/TabBar'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  // Dupla verificação além do middleware — garante que Server Components filhos
+  // nunca recebam dados de um usuário não autenticado mesmo em edge cases de cache.
   if (!user) redirect('/login')
 
+  // Busca apenas os IDs para mínimo de tráfego — só o count importa aqui.
   const { data: alertas } = await supabase.from('alertas_estoque').select('id')
   const totalAlertas = alertas?.length ?? 0
 

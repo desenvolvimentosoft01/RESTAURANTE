@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
-import { formatarDataCurta } from '@/lib/utils'
-import { AjusteEstoqueBtn } from '@/components/produtos/AjusteEstoqueBtn'
 import { Package2 } from 'lucide-react'
+
+import { formatarDataCurta } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/server'
+import { AjusteEstoqueBtn } from '@/components/produtos/AjusteEstoqueBtn'
 import { Badge } from '@/components/ui/badge'
 
 export default async function EstoqueProdutosPage() {

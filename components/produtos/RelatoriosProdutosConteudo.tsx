@@ -1,15 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { BarChart3, Check, Filter, Layers, Package2, Printer, Search, ShoppingBag, TrendingUp, X } from 'lucide-react'
+
 import { formatarMoeda } from '@/lib/utils'
-import {
-  Printer, X, Check, Search, TrendingUp, ShoppingBag,
-  Package2, BarChart3, Layers, Filter,
-} from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-} from 'recharts'
 
 interface VendaProduto {
   produto_id: string | null

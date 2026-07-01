@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
 import { Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+
+import { createClient } from '@/lib/supabase/client'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 export function DeletarContaBtn({ id, descricao }: { id: string; descricao: string }) {
   const [aberto, setAberto] = useState(false)

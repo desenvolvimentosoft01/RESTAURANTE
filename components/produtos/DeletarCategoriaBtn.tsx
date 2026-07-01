@@ -1,21 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { createClient } from '@/lib/supabase/client'
-import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+
+import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+
+import { createClient } from '@/lib/supabase/client'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 
 export function DeletarCategoriaBtn({ id, nome }: { id: string; nome: string }) {
   const [aberto, setAberto] = useState(false)

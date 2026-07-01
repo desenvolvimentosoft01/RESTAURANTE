@@ -1,8 +1,9 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { Search, Filter } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { Filter, Search } from 'lucide-react'
 
 interface Atalho { label: string; dias: number }
 

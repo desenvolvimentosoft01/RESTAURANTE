@@ -206,7 +206,7 @@ export default async function DashboardPage() {
               {[
                 { href: '/venda-balcao', label: 'Venda Balcão', emoji: '🏪' },
                 { href: '/pedidos', label: 'Pedidos iFood', emoji: '🛵' },
-                { href: '/produtos/novo', label: 'Novo Produto', emoji: '➕' },
+                { href: '/produtos', label: 'Produtos', emoji: '🍽️' },
                 { href: '/financeiro/contas', label: 'Contas', emoji: '💰' },
               ].map((a) => (
                 <Link

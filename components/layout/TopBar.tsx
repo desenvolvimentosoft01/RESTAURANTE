@@ -18,6 +18,7 @@ const NOMES_ROTAS: Record<string, string> = {
   'financeiro':               'Financeiro',
   'contas':                   'Contas',
   'relatorios':               'Relatórios',
+  'vendas':                   'Vendas',
 }
 
 interface TopBarProps {
@@ -40,8 +41,8 @@ export function TopBar({ userEmail, alertas = 0 }: TopBarProps) {
   async function sair() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    // Hard navigation: limpa estado React + cookies são removidos pelo middleware
+    window.location.href = '/login'
   }
 
   return (

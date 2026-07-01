@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, ShoppingCart, Bike, UtensilsCrossed, Wallet, ChevronDown,
+  LayoutDashboard, ShoppingCart, Bike, UtensilsCrossed, Wallet, ChevronDown, BarChart3,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -44,8 +44,18 @@ const menu: Item[] = [
     label: 'Financeiro',
     icon: Wallet,
     filhos: [
-      { href: '/financeiro/contas',    label: 'Contas',     icone: '💰' },
-      { href: '/financeiro/relatorios', label: 'Relatórios', icone: '📈' },
+      { href: '/financeiro/contas', label: 'Contas', icone: '💰' },
+    ],
+  },
+  {
+    tipo: 'grupo',
+    label: 'Relatórios',
+    icon: BarChart3,
+    filhos: [
+      { href: '/relatorios/vendas',   label: 'Vendas',       icone: '📊' },
+      { href: '/relatorios/contas',   label: 'Contas',       icone: '📋' },
+      { href: '/produtos/relatorios', label: 'Produtos',     icone: '🍽️' },
+      { href: '/financeiro/relatorios', label: 'Financeiro', icone: '📈' },
     ],
   },
 ]
@@ -54,7 +64,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { abrirAba } = useTabs()
-  const [gruposAbertos, setGruposAbertos] = useState<string[]>(['Produtos', 'Financeiro'])
+  const [gruposAbertos, setGruposAbertos] = useState<string[]>(['Produtos', 'Financeiro', 'Relatórios'])
 
   const toggleGrupo = (label: string) =>
     setGruposAbertos((prev) =>

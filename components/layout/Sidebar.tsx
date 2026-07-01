@@ -100,7 +100,9 @@ export function Sidebar() {
 
           const Icon = item.icon
           const aberto = gruposAbertos.includes(item.label)
-          const grupoAtivo = item.filhos.some((f) => pathname === f.href || pathname.startsWith(f.href + '/'))
+          const grupoAtivo = item.filhos.some(
+            (f) => pathname === f.href || pathname.startsWith(f.href + '/')
+          )
 
           return (
             <div key={item.label}>
@@ -119,7 +121,15 @@ export function Sidebar() {
               {aberto && (
                 <div className="ml-6 mt-0.5 mb-1 border-l border-slate-700 pl-3 space-y-0.5">
                   {item.filhos.map((filho) => {
-                    const ativo = pathname === filho.href || pathname.startsWith(filho.href + '/')
+                    // Ativo apenas se: match exato OU começa com href/ E nenhum irmão cobre melhor
+                    const ativo =
+                      pathname === filho.href ||
+                      (pathname.startsWith(filho.href + '/') &&
+                        !item.filhos.some(
+                          (outro) =>
+                            outro.href !== filho.href &&
+                            (pathname === outro.href || pathname.startsWith(outro.href + '/'))
+                        ))
                     return (
                       <Link
                         key={filho.href}

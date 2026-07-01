@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
+import { TabBar } from '@/components/layout/TabBar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar userEmail={user.email} alertas={totalAlertas} />
+        <TabBar />
         <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>

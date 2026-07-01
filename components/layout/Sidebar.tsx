@@ -1,46 +1,42 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  Bike,
-  UtensilsCrossed,
-  Wallet,
-  ChevronDown,
+  LayoutDashboard, ShoppingCart, Bike, UtensilsCrossed, Wallet, ChevronDown,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useTabs, type Aba } from '@/hooks/useTabs'
 
 interface ItemSimples {
   tipo: 'link'
   href: string
   label: string
   icon: React.ElementType
+  icone: string
 }
 
 interface ItemGrupo {
   tipo: 'grupo'
   label: string
   icon: React.ElementType
-  filhos: { href: string; label: string }[]
+  filhos: { href: string; label: string; icone: string }[]
 }
 
 type Item = ItemSimples | ItemGrupo
 
 const menu: Item[] = [
-  { tipo: 'link', href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { tipo: 'link', href: '/venda-balcao', label: 'Venda Balcão', icon: ShoppingCart },
-  { tipo: 'link', href: '/pedidos', label: 'Pedidos iFood', icon: Bike },
+  { tipo: 'link', href: '/',             label: 'Dashboard',    icon: LayoutDashboard, icone: '📊' },
+  { tipo: 'link', href: '/venda-balcao', label: 'Venda Balcão', icon: ShoppingCart,    icone: '🏪' },
+  { tipo: 'link', href: '/pedidos',      label: 'Pedidos iFood', icon: Bike,           icone: '🛵' },
   {
     tipo: 'grupo',
     label: 'Produtos',
     icon: UtensilsCrossed,
     filhos: [
-      { href: '/produtos', label: 'Cadastro' },
-      { href: '/produtos/categorias', label: 'Categorias' },
-      { href: '/produtos/estoque', label: 'Estoque' },
+      { href: '/produtos',            label: 'Cadastro de Produtos', icone: '🍽️' },
+      { href: '/produtos/categorias', label: 'Categorias',           icone: '🏷️' },
+      { href: '/produtos/estoque',    label: 'Estoque',              icone: '📦' },
     ],
   },
   {
@@ -48,14 +44,16 @@ const menu: Item[] = [
     label: 'Financeiro',
     icon: Wallet,
     filhos: [
-      { href: '/financeiro/contas', label: 'Contas' },
-      { href: '/financeiro/relatorios', label: 'Relatórios' },
+      { href: '/financeiro/contas',    label: 'Contas',     icone: '💰' },
+      { href: '/financeiro/relatorios', label: 'Relatórios', icone: '📈' },
     ],
   },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { abrirAba } = useTabs()
   const [gruposAbertos, setGruposAbertos] = useState<string[]>(['Produtos', 'Financeiro'])
 
   const toggleGrupo = (label: string) =>
@@ -63,12 +61,17 @@ export function Sidebar() {
       prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label]
     )
 
+  function navegar(aba: Aba) {
+    abrirAba(aba)
+    router.push(aba.href)
+  }
+
   return (
     <aside className="w-56 min-h-screen bg-slate-900 flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-4 py-5 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-sm">R</div>
+          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-sm shrink-0">R</div>
           <div>
             <p className="text-white font-bold text-sm leading-tight">Restaurante</p>
             <p className="text-slate-400 text-[10px]">Sistema de Gestão</p>
@@ -82,11 +85,11 @@ export function Sidebar() {
             const Icon = item.icon
             const ativo = pathname === item.href
             return (
-              <Link
+              <button
                 key={item.href}
-                href={item.href}
+                onClick={() => navegar({ href: item.href, label: item.label, icone: item.icone })}
                 className={cn(
-                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all',
+                  'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all',
                   ativo
                     ? 'bg-amber-500 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
@@ -94,7 +97,7 @@ export function Sidebar() {
               >
                 <Icon size={15} />
                 {item.label}
-              </Link>
+              </button>
             )
           }
 
@@ -121,7 +124,6 @@ export function Sidebar() {
               {aberto && (
                 <div className="ml-6 mt-0.5 mb-1 border-l border-slate-700 pl-3 space-y-0.5">
                   {item.filhos.map((filho) => {
-                    // Ativo apenas se: match exato OU começa com href/ E nenhum irmão cobre melhor
                     const ativo =
                       pathname === filho.href ||
                       (pathname.startsWith(filho.href + '/') &&
@@ -131,18 +133,18 @@ export function Sidebar() {
                             (pathname === outro.href || pathname.startsWith(outro.href + '/'))
                         ))
                     return (
-                      <Link
+                      <button
                         key={filho.href}
-                        href={filho.href}
+                        onClick={() => navegar({ href: filho.href, label: filho.label, icone: filho.icone })}
                         className={cn(
-                          'block px-2 py-1.5 rounded-md text-[12px] font-medium transition-all',
+                          'w-full text-left block px-2 py-1.5 rounded-md text-[12px] font-medium transition-all',
                           ativo
                             ? 'text-amber-400 bg-slate-800'
                             : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
                         )}
                       >
                         {filho.label}
-                      </Link>
+                      </button>
                     )
                   })}
                 </div>

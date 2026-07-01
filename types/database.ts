@@ -3,6 +3,7 @@ export type OrigemPedido = 'balcao' | 'ifood'
 export type StatusPedido = 'pendente' | 'confirmado' | 'em_preparo' | 'pronto' | 'entregue' | 'cancelado'
 export type FormaPagamento = 'dinheiro' | 'credito' | 'debito' | 'pix' | 'ifood'
 export type TipoTransacao = 'entrada' | 'saida'
+export type TipoConta = 'pagar' | 'receber'
 export type CategoriaFinanceira =
   | 'venda'
   | 'compra_insumo'
@@ -30,35 +31,21 @@ export interface Produto {
   imagem_url: string | null
   ativo: boolean
   disponivel_ifood: boolean
+  controla_estoque: boolean
+  estoque_atual: number
+  estoque_minimo: number
   categoria?: Categoria
 }
 
-export interface Ingrediente {
-  id: string
-  nome: string
-  unidade: string
-  quantidade_atual: number
-  quantidade_minima: number
-  preco_custo: number
-}
-
-export interface FichaTecnica {
+export interface MovimentacaoEstoqueProduto {
   id: string
   produto_id: string
-  ingrediente_id: string
-  quantidade: number
-  ingrediente?: Ingrediente
-}
-
-export interface MovimentacaoEstoque {
-  id: string
-  ingrediente_id: string
   tipo: TipoMovimentacao
   quantidade: number
   motivo: string | null
   pedido_id: string | null
   created_at: string
-  ingrediente?: Ingrediente
+  produto?: Produto
 }
 
 export interface Pedido {
@@ -68,6 +55,7 @@ export interface Pedido {
   status: StatusPedido
   forma_pagamento: FormaPagamento | null
   nome_cliente: string | null
+  entregador: string | null
   subtotal: number
   desconto: number
   total: number
@@ -98,6 +86,19 @@ export interface Transacao {
   created_at: string
 }
 
+export interface Conta {
+  id: string
+  tipo: TipoConta
+  descricao: string
+  valor: number
+  vencimento: string
+  pago: boolean
+  pago_em: string | null
+  categoria: string | null
+  observacao: string | null
+  created_at: string
+}
+
 // Views
 export interface ResumoFinanceiroHoje {
   total_entradas: number
@@ -110,6 +111,27 @@ export interface ProdutoMaisVendido {
   nome_produto: string
   total_quantidade: number
   total_receita: number
+}
+
+// Mantido para compatibilidade com módulo de ingredientes
+export interface MovimentacaoEstoque {
+  id: string
+  ingrediente_id: string
+  tipo: TipoMovimentacao
+  quantidade: number
+  motivo: string | null
+  pedido_id: string | null
+  created_at: string
+  ingrediente?: Ingrediente
+}
+
+export interface Ingrediente {
+  id: string
+  nome: string
+  unidade: string
+  quantidade_atual: number
+  quantidade_minima: number
+  preco_custo: number
 }
 
 export interface AlertaEstoque {

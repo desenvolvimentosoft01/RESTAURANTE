@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { Package2, Search } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { correspondeLike } from '@/lib/busca'
 import { formatarDataCurta } from '@/lib/utils'
 import { AjusteEstoqueBtn } from './AjusteEstoqueBtn'
 import { Badge } from '@/components/ui/badge'
+import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
 import { Input } from '@/components/ui/input'
 import type { UnidadeMedida } from '@/types/database'
 
@@ -39,17 +41,23 @@ export function EstoqueConteudo({ produtos, movimentacoes }: Props) {
   const [texto, setTexto] = useState('')
   const [textoAplicado, setTextoAplicado] = useState('')
 
-  const produtosFiltrados = useMemo(
-    () => produtos.filter((p) => correspondeLike(p.nome, textoAplicado)),
-    [produtos, textoAplicado]
-  )
+  const aplicarFiltro = useCallback((termo: string) => {
+    return produtos.filter((p) => correspondeLike(p.nome, termo))
+  }, [produtos])
 
-  function pesquisar() { setTextoAplicado(texto) }
+  const produtosFiltrados = useMemo(() => aplicarFiltro(textoAplicado), [aplicarFiltro, textoAplicado])
+
+  function pesquisar() {
+    setTextoAplicado(texto)
+    if (!aplicarFiltro(texto).length) {
+      toast.warning('Nenhum registro encontrado para os filtros informados.')
+    }
+  }
   function limparBusca() { setTexto(''); setTextoAplicado('') }
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3 print:hidden">
         <div className="relative max-w-sm flex-1 min-w-55">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
@@ -73,6 +81,7 @@ export function EstoqueConteudo({ produtos, movimentacoes }: Props) {
         >
           Limpar
         </button>
+        <BotaoImprimir />
         {textoAplicado && (
           <span className="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-2 rounded-md">
             {produtosFiltrados.length} registro(s) encontrado(s)

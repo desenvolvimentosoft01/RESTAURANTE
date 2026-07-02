@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   // Oculta o indicador de build do Next.js no navegador — já desativado via
   // globals.css (nextjs-portal { display: none }), mas a flag evita o mount do elemento.
   devIndicators: false,
+  experimental: {
+    // Recharts é pesado e não está na lista padrão do Next — importa só os
+    // módulos usados nos relatórios em vez do pacote inteiro.
+    optimizePackageImports: ['recharts'],
+  },
 };
 
 export default nextConfig;

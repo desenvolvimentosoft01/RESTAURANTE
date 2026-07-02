@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-import { Eraser, FileText, FilePlus, List, Pencil, Save, Search, Trash2, X } from 'lucide-react'
+import { Eraser, FileText, FilePlus, List, Pencil, Printer, Save, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { formatarMoeda } from '@/lib/utils'
@@ -84,19 +84,26 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   const [filtroAplicado, setFiltroAplicado] = useState(FILTRO_VAZIO)
   const [buscaFeita, setBuscaFeita] = useState(false)
 
-  const produtosFiltrados = useMemo(() => {
+  const aplicarFiltro = useCallback((f: typeof FILTRO_VAZIO) => {
     return produtos.filter((p) =>
-      (correspondeLike(p.nome, filtroAplicado.texto) || correspondeLike(p.descricao, filtroAplicado.texto)) &&
-      (filtroAplicado.categoria === 'todas' || p.categoria_id === filtroAplicado.categoria) &&
-      correspondeTriState(p.ativo, filtroAplicado.ativo) &&
-      correspondeTriState(p.disponivel_ifood, filtroAplicado.ifood) &&
-      correspondeTriState(p.controla_estoque, filtroAplicado.estoque)
+      (correspondeLike(p.nome, f.texto) || correspondeLike(p.descricao, f.texto)) &&
+      (f.categoria === 'todas' || p.categoria_id === f.categoria) &&
+      correspondeTriState(p.ativo, f.ativo) &&
+      correspondeTriState(p.disponivel_ifood, f.ifood) &&
+      correspondeTriState(p.controla_estoque, f.estoque)
     )
-  }, [produtos, filtroAplicado])
+  }, [produtos])
+
+  const produtosFiltrados = useMemo(() => aplicarFiltro(filtroAplicado), [aplicarFiltro, filtroAplicado])
 
   function pesquisar() {
     setFiltroAplicado(filtro)
     setBuscaFeita(true)
+    // Aviso explícito quando a busca não retorna nada — a mensagem na grade
+    // sozinha é fácil de passar despercebida.
+    if (!aplicarFiltro(filtro).length) {
+      toast.warning('Nenhum registro encontrado para os filtros informados.')
+    }
   }
 
   function limparBusca() {
@@ -221,19 +228,23 @@ export function TelaProdutos({ produtos, categorias }: Props) {
     { label: 'Novo', icon: FilePlus, onClick: novoRegistro, variante: 'primary' as const },
     { label: 'Editar', icon: Pencil, onClick: () => { if (linhaSelecionada) { const p = produtos.find(x => x.id === linhaSelecionada); if (p) carregarProduto(p) } }, disabled: !linhaSelecionada, variante: 'default' as const },
     { label: 'Excluir', icon: Trash2, onClick: () => { if (linhaSelecionada) { const p = produtos.find(x => x.id === linhaSelecionada); if (p) excluir(p.id, p.nome) } }, disabled: !linhaSelecionada, variante: 'danger' as const },
+    { separator: true } as const,
+    { label: 'Imprimir', icon: Printer, onClick: () => window.print(), variante: 'default' as const },
   ]
 
   const botoesCadastro = [
     { label: 'Gravar', icon: Save, onClick: handleSubmit(onSubmit), variante: 'success' as const, disabled: salvando },
     { label: 'Limpar', icon: Eraser, onClick: limpar, variante: 'warning' as const },
     { label: 'Cancelar', icon: X, onClick: cancelar, variante: 'danger' as const },
+    { separator: true } as const,
+    { label: 'Imprimir', icon: Printer, onClick: () => window.print(), variante: 'default' as const },
   ]
 
   return (
     <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden flex flex-col">
       {/* Padrão TDI (Tela De Informação): Grade + Cadastro na mesma tela.
           Evita navegação de páginas e mantém o contexto do registro selecionado. */}
-      <div className="flex border-b border-slate-300 bg-slate-50">
+      <div className="flex border-b border-slate-300 bg-slate-50 print:hidden">
         <button
           onClick={() => setAba('grade')}
           className={`flex items-center gap-2 px-5 py-2.5 text-[13px] font-medium border-r border-slate-300 transition-all ${
@@ -267,8 +278,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
         <div className="overflow-auto flex-1">
           {/* Pesquisa — usa os mesmos campos do cadastro como filtro da grade.
               A grade em si é somente leitura; edição só acontece na aba Cadastro. */}
-          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200">
-            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200 print:hidden">
+            <div className="flex flex-col gap-1 min-w-55 flex-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Nome ou Descrição</Label>
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -568,7 +579,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       )}
 
       {/* Status bar */}
-      <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400">
+      <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400 print:hidden">
         <span>
           {aba === 'grade'
             ? `${produtosFiltrados.length} de ${produtos.length} registro(s) ${linhaSelecionada ? '• 1 selecionado' : ''}`

@@ -3,9 +3,11 @@
 import { useState } from 'react'
 
 import { Search, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { correspondeLike } from '@/lib/busca'
 import { FiltroRelatorio } from './FiltroRelatorio'
+import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
 import { Input } from '@/components/ui/input'
 import type { Auditoria } from '@/types/database'
 
@@ -34,19 +36,28 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
 
   const telas = Array.from(new Set(registros.map((r) => r.tela))).sort()
 
-  function pesquisar() { setFiltroAplicado(filtro) }
+  function aplicarFiltro(f: typeof FILTRO_VAZIO) {
+    return registros.filter((r) => {
+      if (f.tela !== 'todas' && r.tela !== f.tela) return false
+      if (f.acao !== 'todas' && r.acao !== f.acao) return false
+      if (f.texto &&
+        !correspondeLike(r.usuario_email, f.texto) &&
+        !correspondeLike(r.tabela, f.texto) &&
+        !correspondeLike(r.registro_id, f.texto)
+      ) return false
+      return true
+    })
+  }
+
+  function pesquisar() {
+    setFiltroAplicado(filtro)
+    if (!aplicarFiltro(filtro).length) {
+      toast.warning('Nenhum registro encontrado para os filtros informados.')
+    }
+  }
   function limparBusca() { setFiltro(FILTRO_VAZIO); setFiltroAplicado(FILTRO_VAZIO) }
 
-  const filtrados = registros.filter((r) => {
-    if (filtroAplicado.tela !== 'todas' && r.tela !== filtroAplicado.tela) return false
-    if (filtroAplicado.acao !== 'todas' && r.acao !== filtroAplicado.acao) return false
-    if (filtroAplicado.texto &&
-      !correspondeLike(r.usuario_email, filtroAplicado.texto) &&
-      !correspondeLike(r.tabela, filtroAplicado.texto) &&
-      !correspondeLike(r.registro_id, filtroAplicado.texto)
-    ) return false
-    return true
-  })
+  const filtrados = aplicarFiltro(filtroAplicado)
 
   return (
     <div className="space-y-5">
@@ -99,6 +110,7 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
         >
           Limpar
         </button>
+        <BotaoImprimir className="h-8 self-end" />
       </FiltroRelatorio>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

@@ -9,6 +9,7 @@ import { formatarDataCurta, formatarMoeda } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { registrarAuditoria } from '@/lib/auditoria'
 import { Badge } from '@/components/ui/badge'
+import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -159,7 +160,10 @@ export function FinanceiroConteudo() {
             {filtroTipo === 'todos' ? 'Todos' : filtroTipo === 'entrada' ? 'Entradas' : 'Saídas'}
           </button>
         </div>
-        <FormularioDespesa onSalvo={carregarDados} />
+        <div className="flex items-center gap-2">
+          <BotaoImprimir />
+          <FormularioDespesa onSalvo={carregarDados} />
+        </div>
       </div>
 
       <Card>

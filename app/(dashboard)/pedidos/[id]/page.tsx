@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Store, Bike } from 'lucide-react'
 import { formatarMoeda, formatarData } from '@/lib/utils'
+import { ImprimirCupomBtn } from '@/components/pedidos/ImprimirCupomBtn'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -59,6 +60,9 @@ export default async function PedidoDetalhePage({
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Detalhe do Pedido</h1>
           <p className="text-xs text-slate-400 mt-0.5 font-mono">{pedido.id}</p>
+        </div>
+        <div className="ml-auto">
+          <ImprimirCupomBtn pedido={pedido} />
         </div>
       </div>
 

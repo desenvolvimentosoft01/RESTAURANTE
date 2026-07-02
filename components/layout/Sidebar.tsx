@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import { BarChart3, Bike, ChevronDown, LayoutDashboard, ShoppingCart, UtensilsCrossed, Wallet } from 'lucide-react'
 
@@ -64,7 +65,6 @@ const menu: Item[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   const { abrirAba } = useTabs()
   const [gruposAbertos, setGruposAbertos] = useState<string[]>(['Produtos', 'Financeiro', 'Relatórios'])
 
@@ -73,9 +73,11 @@ export function Sidebar() {
       prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label]
     )
 
-  function navegar(aba: Aba) {
+  // Navegação via <Link> (não router.push) para o Next.js pré-carregar as
+  // rotas visíveis no menu — a troca de tela fica quase instantânea.
+  // O onClick só registra a aba no sistema MDI; o Link cuida da navegação.
+  function registrarAba(aba: Aba) {
     abrirAba(aba)
-    router.push(aba.href)
   }
 
   return (
@@ -97,9 +99,10 @@ export function Sidebar() {
             const Icon = item.icon
             const ativo = pathname === item.href
             return (
-              <button
+              <Link
                 key={item.href}
-                onClick={() => navegar({ href: item.href, label: item.label, icone: item.icone })}
+                href={item.href}
+                onClick={() => registrarAba({ href: item.href, label: item.label, icone: item.icone })}
                 className={cn(
                   'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all',
                   ativo
@@ -109,7 +112,7 @@ export function Sidebar() {
               >
                 <Icon size={15} />
                 {item.label}
-              </button>
+              </Link>
             )
           }
 
@@ -145,9 +148,10 @@ export function Sidebar() {
                             (pathname === outro.href || pathname.startsWith(outro.href + '/'))
                         ))
                     return (
-                      <button
+                      <Link
                         key={filho.href}
-                        onClick={() => navegar({ href: filho.href, label: filho.label, icone: filho.icone })}
+                        href={filho.href}
+                        onClick={() => registrarAba({ href: filho.href, label: filho.label, icone: filho.icone })}
                         className={cn(
                           'w-full text-left block px-2 py-1.5 rounded-md text-[12px] font-medium transition-all',
                           ativo
@@ -156,7 +160,7 @@ export function Sidebar() {
                         )}
                       >
                         {filho.label}
-                      </button>
+                      </Link>
                     )
                   })}
                 </div>

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-import { Eraser, FileText, FilePlus, List, Pencil, Save, Search, Trash2, X } from 'lucide-react'
+import { Eraser, FileText, FilePlus, List, Pencil, Printer, Save, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { correspondeLike, correspondeTriState, type FiltroTriState } from '@/lib/busca'
@@ -41,13 +41,20 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
   const [filtro, setFiltro] = useState(FILTRO_VAZIO)
   const [filtroAplicado, setFiltroAplicado] = useState(FILTRO_VAZIO)
 
-  const categoriasFiltradas = useMemo(() => {
+  const aplicarFiltro = useCallback((f: typeof FILTRO_VAZIO) => {
     return categorias.filter((c) =>
-      correspondeLike(c.nome, filtroAplicado.texto) && correspondeTriState(c.ativo, filtroAplicado.ativo)
+      correspondeLike(c.nome, f.texto) && correspondeTriState(c.ativo, f.ativo)
     )
-  }, [categorias, filtroAplicado])
+  }, [categorias])
 
-  function pesquisar() { setFiltroAplicado(filtro) }
+  const categoriasFiltradas = useMemo(() => aplicarFiltro(filtroAplicado), [aplicarFiltro, filtroAplicado])
+
+  function pesquisar() {
+    setFiltroAplicado(filtro)
+    if (!aplicarFiltro(filtro).length) {
+      toast.warning('Nenhum registro encontrado para os filtros informados.')
+    }
+  }
   function limparBusca() { setFiltro(FILTRO_VAZIO); setFiltroAplicado(FILTRO_VAZIO) }
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isDirty } } = useForm<FormInput, unknown, FormOutput>({
@@ -123,18 +130,22 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
     { label: 'Novo', icon: FilePlus, onClick: novoRegistro, variante: 'primary' as const },
     { label: 'Editar', icon: Pencil, onClick: () => { const c = categorias.find(x => x.id === linhaSelecionada); if (c) carregar(c) }, disabled: !linhaSelecionada },
     { label: 'Excluir', icon: Trash2, onClick: () => { const c = categorias.find(x => x.id === linhaSelecionada); if (c) excluir(c.id, c.nome) }, disabled: !linhaSelecionada, variante: 'danger' as const },
+    { separator: true } as const,
+    { label: 'Imprimir', icon: Printer, onClick: () => window.print(), variante: 'default' as const },
   ]
 
   const botoesCadastro = [
     { label: 'Gravar', icon: Save, onClick: handleSubmit(onSubmit), variante: 'success' as const, disabled: salvando },
     { label: 'Limpar', icon: Eraser, onClick: limpar, variante: 'warning' as const },
     { label: 'Cancelar', icon: X, onClick: cancelar, variante: 'danger' as const },
+    { separator: true } as const,
+    { label: 'Imprimir', icon: Printer, onClick: () => window.print(), variante: 'default' as const },
   ]
 
   return (
     <div className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden flex flex-col">
       {/* Abas */}
-      <div className="flex border-b border-slate-300 bg-slate-50">
+      <div className="flex border-b border-slate-300 bg-slate-50 print:hidden">
         {(['grade', 'cadastro'] as const).map((a) => (
           <button
             key={a}
@@ -154,8 +165,8 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
 
       {aba === 'grade' && (
         <div className="overflow-auto flex-1">
-          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200">
-            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200 print:hidden">
+            <div className="flex flex-col gap-1 min-w-55 flex-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Nome</Label>
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -266,7 +277,7 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400">
+      <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400 print:hidden">
         <span>{aba === 'grade' ? `${categoriasFiltradas.length} de ${categorias.length} registro(s)${linhaSelecionada ? ' • 1 selecionado' : ''}` : editando ? `Editando: ${editando.id.slice(0,8)}...` : 'Novo registro'}</span>
         <span>{salvando ? '💾 Salvando...' : 'Pronto'}</span>
       </div>

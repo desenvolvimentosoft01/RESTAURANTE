@@ -1,14 +1,16 @@
 import { cn } from '@/lib/utils'
 import { LucideIcon } from 'lucide-react'
 
-export interface BotaoToolbar {
-  label: string
-  icon: LucideIcon
-  onClick: () => void
-  variante?: 'default' | 'primary' | 'danger' | 'success' | 'warning'
-  disabled?: boolean
-  separator?: boolean
-}
+export type BotaoToolbar =
+  | { separator: true }
+  | {
+      label: string
+      icon: LucideIcon
+      onClick: () => void
+      variante?: 'default' | 'primary' | 'danger' | 'success' | 'warning'
+      disabled?: boolean
+      separator?: false
+    }
 
 interface Props {
   botoes: BotaoToolbar[]
@@ -25,7 +27,7 @@ const varianteCss: Record<string, string> = {
 
 export function BarraFerramentas({ botoes, titulo }: Props) {
   return (
-    <div className="flex items-center gap-1 bg-slate-100 border-b border-slate-300 px-2 py-1.5">
+    <div className="flex items-center gap-1 bg-slate-100 border-b border-slate-300 px-2 py-1.5 print:hidden">
       {titulo && (
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 mr-1 border-r border-slate-300 pr-4">
           {titulo}

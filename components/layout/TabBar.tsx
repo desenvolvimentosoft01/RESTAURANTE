@@ -47,7 +47,7 @@ export function TabBar() {
   if (abas.length === 0) return null
 
   return (
-    <div className="flex items-end gap-0 overflow-x-auto bg-slate-800 px-2 pt-1 shrink-0 scrollbar-none border-b border-slate-700">
+    <div className="flex items-end gap-0 overflow-x-auto bg-slate-800 px-2 pt-1 shrink-0 scrollbar-none border-b border-slate-700 print:hidden">
       {abas.map((aba) => {
         const ativa = aba.href === abaAtiva
         return (

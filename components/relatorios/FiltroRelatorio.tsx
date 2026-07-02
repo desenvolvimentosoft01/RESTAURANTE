@@ -57,7 +57,7 @@ export function FiltroRelatorio({ inicio, fim, setInicio, setFim, extraParams = 
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3 print:hidden">
       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide">
         <Filter size={13} />
         Filtros

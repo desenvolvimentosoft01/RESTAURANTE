@@ -2,6 +2,7 @@ import { PackageX } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { ReativarProdutoBtn } from '@/components/produtos/ReativarProdutoBtn'
+import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
 
 export default async function ProdutosInativosPage() {
   const supabase = await createClient()
@@ -14,11 +15,14 @@ export default async function ProdutosInativosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-800">Produtos Inativos</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Produtos tirados do mix da loja — inclui os que não puderam ser excluídos por já terem movimentação/venda
-        </p>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Produtos Inativos</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Produtos tirados do mix da loja — inclui os que não puderam ser excluídos por já terem movimentação/venda
+          </p>
+        </div>
+        <BotaoImprimir />
       </div>
 
       {!produtos?.length ? (

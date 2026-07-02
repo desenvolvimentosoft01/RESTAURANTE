@@ -5,10 +5,11 @@ import Link from 'next/link'
 
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Bike, ChevronRight, Clock, Store } from 'lucide-react'
+import { Bike, ChevronRight, Clock, Printer, Store } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { formatarMoeda } from '@/lib/utils'
+import { imprimirCupom } from '@/lib/cupom'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -151,6 +152,16 @@ export function CardPedido({ pedido }: Props) {
               Cancelar
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs gap-1"
+            title="Imprimir cupom do pedido"
+            onClick={() => imprimirCupom(pedido)}
+          >
+            <Printer size={13} />
+            Cupom
+          </Button>
           <Link href={`/pedidos/${pedido.id}`} className="ml-auto">
             <Button size="sm" variant="ghost" className="text-xs gap-1">
               Ver <ChevronRight size={13} />

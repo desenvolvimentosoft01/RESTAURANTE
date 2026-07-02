@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 import { formatarMoeda } from '@/lib/utils'
+import { imprimirCupom } from '@/lib/cupom'
 import { createClient } from '@/lib/supabase/client'
 import { useCarrinho } from '@/hooks/useCarrinho'
 import { Button } from '@/components/ui/button'
@@ -91,6 +92,11 @@ export function ModalPagamento({ aberto, onFechar }: Props) {
       })
 
       toast.success('Venda finalizada com sucesso!')
+
+      if (confirm('Deseja imprimir o cupom do pedido?')) {
+        imprimirCupom({ ...pedido, itens: itensPedido })
+      }
+
       limpar()
       setNomeCliente('')
       setFormaPagamento('dinheiro')

@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { correspondeLike } from '@/lib/busca'
 import { createClient } from '@/lib/supabase/client'
 import { usePedidosRealtime } from '@/hooks/usePedidosRealtime'
+import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
 import { Input } from '@/components/ui/input'
 import { CardPedido } from './CardPedido'
 import type { Pedido, StatusPedido } from '@/types/database'
@@ -32,7 +33,19 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
   const [texto, setTexto] = useState('')
   const [textoAplicado, setTextoAplicado] = useState('')
 
-  function pesquisar() { setTextoAplicado(texto) }
+  function pesquisar() {
+    setTextoAplicado(texto)
+    const encontrados = pedidos
+      .filter((p) => filtro === 'todos' || p.status === filtro)
+      .filter((p) =>
+        correspondeLike(p.nome_cliente, texto) ||
+        correspondeLike(p.entregador, texto) ||
+        (p.itens ?? []).some((i) => correspondeLike(i.nome_produto, texto))
+      )
+    if (!encontrados.length) {
+      toast.warning('Nenhum registro encontrado para os filtros informados.')
+    }
+  }
   function limparBusca() { setTexto(''); setTextoAplicado('') }
 
   useEffect(() => {
@@ -70,7 +83,7 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3 print:hidden">
         <div className="relative max-w-sm flex-1 min-w-55">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
@@ -94,6 +107,7 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
         >
           Limpar
         </button>
+        <BotaoImprimir />
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">

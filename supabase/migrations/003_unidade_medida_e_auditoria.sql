@@ -11,6 +11,12 @@ ALTER TABLE public.produtos
   ADD COLUMN IF NOT EXISTS unidade_medida TEXT NOT NULL DEFAULT 'UN'
     CHECK (unidade_medida IN ('UN','KG','G','L','ML','PC','CX','FT'));
 
+-- As views abaixo dependem das colunas que vão mudar de tipo; o Postgres não
+-- permite ALTER COLUMN TYPE com uma view/rule dependendo da coluna, então
+-- elas são derrubadas aqui e recriadas mais abaixo (idênticas às de 001).
+DROP VIEW IF EXISTS public.alertas_estoque;
+DROP VIEW IF EXISTS public.produtos_mais_vendidos;
+
 ALTER TABLE public.produtos
   ALTER COLUMN estoque_atual TYPE NUMERIC(10,3),
   ALTER COLUMN estoque_minimo TYPE NUMERIC(10,3);
@@ -20,6 +26,27 @@ ALTER TABLE public.itens_pedido
 
 ALTER TABLE public.movimentacoes_estoque_produto
   ALTER COLUMN quantidade TYPE NUMERIC(10,3);
+
+CREATE VIEW public.alertas_estoque
+  WITH (security_invoker = true) AS
+SELECT id, nome, estoque_atual AS quantidade_atual, estoque_minimo AS quantidade_minima
+FROM public.produtos
+WHERE controla_estoque = true
+  AND estoque_atual <= estoque_minimo
+  AND ativo = true;
+
+CREATE VIEW public.produtos_mais_vendidos
+  WITH (security_invoker = true) AS
+SELECT
+  ip.produto_id,
+  ip.nome_produto,
+  SUM(ip.quantidade) AS total_quantidade,
+  SUM(ip.subtotal) AS total_receita
+FROM public.itens_pedido ip
+JOIN public.pedidos p ON p.id = ip.pedido_id
+WHERE p.status NOT IN ('cancelado')
+GROUP BY ip.produto_id, ip.nome_produto
+ORDER BY total_quantidade DESC;
 
 -- ===== 2. FIX: função de baixa de estoque chamada pelo app tinha nome diferente =====
 -- O app chama supabase.rpc('baixar_estoque_venda', { pedido_id }), mas só existia

@@ -29,7 +29,7 @@ type Item = ItemSimples | ItemGrupo
 const menu: Item[] = [
   { tipo: 'link', href: '/',             label: 'Dashboard',    icon: LayoutDashboard, icone: '📊' },
   { tipo: 'link', href: '/venda-balcao', label: 'Venda Balcão', icon: ShoppingCart,    icone: '🏪' },
-  { tipo: 'link', href: '/pedidos',      label: 'Pedidos iFood', icon: Bike,           icone: '🛵' },
+  { tipo: 'link', href: '/pedidos',      label: 'Pedidos',      icon: Bike,            icone: '🛵' },
   {
     tipo: 'grupo',
     label: 'Produtos',

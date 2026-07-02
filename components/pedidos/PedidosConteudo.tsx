@@ -33,6 +33,7 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
   const contadorRef = useRef(pedidos.length)
   const [texto, setTexto] = useState('')
   const [textoAplicado, setTextoAplicado] = useState('')
+  const [canal, setCanal] = useState<'todos' | 'balcao' | 'ifood'>('todos')
 
   function pesquisar() {
     setTextoAplicado(texto)
@@ -71,6 +72,7 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
 
   const pedidosFiltrados = pedidos
     .filter((p) => filtro === 'todos' || p.status === filtro)
+    .filter((p) => canal === 'todos' || p.origem === canal)
     .filter((p) =>
       correspondeLike(p.nome_cliente, textoAplicado) ||
       correspondeLike(p.entregador, textoAplicado) ||
@@ -95,6 +97,15 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
             className="pl-9 h-9"
           />
         </div>
+        <select
+          value={canal}
+          onChange={(e) => setCanal(e.target.value as typeof canal)}
+          className="h-9 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+        >
+          <option value="todos">Todos os canais</option>
+          <option value="balcao">Balcão</option>
+          <option value="ifood">iFood</option>
+        </select>
         <button
           onClick={pesquisar}
           className="h-9 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"

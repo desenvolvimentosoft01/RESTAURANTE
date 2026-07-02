@@ -36,25 +36,47 @@ interface Props {
 }
 
 export function EstoqueConteudo({ produtos, movimentacoes }: Props) {
-  const [buscaTexto, setBuscaTexto] = useState('')
+  const [texto, setTexto] = useState('')
+  const [textoAplicado, setTextoAplicado] = useState('')
 
   const produtosFiltrados = useMemo(
-    () => produtos.filter((p) => correspondeLike(p.nome, buscaTexto)),
-    [produtos, buscaTexto]
+    () => produtos.filter((p) => correspondeLike(p.nome, textoAplicado)),
+    [produtos, textoAplicado]
   )
+
+  function pesquisar() { setTextoAplicado(texto) }
+  function limparBusca() { setTexto(''); setTextoAplicado('') }
 
   return (
     <div className="space-y-8">
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <Input
-          placeholder="Pesquisar produto..."
-          value={buscaTexto}
-          onChange={(e) => setBuscaTexto(e.target.value)}
-          className="pl-9 h-9"
-        />
-        {buscaTexto && (
-          <span className="text-xs text-slate-500 mt-1 block">{produtosFiltrados.length} de {produtos.length} produto(s) encontrado(s)</span>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative max-w-sm flex-1 min-w-55">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Pesquisar produto..."
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
+            className="pl-9 h-9"
+          />
+        </div>
+        <button
+          onClick={pesquisar}
+          className="h-9 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+        >
+          <Search size={13} />
+          Pesquisar
+        </button>
+        <button
+          onClick={limparBusca}
+          className="h-9 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+        >
+          Limpar
+        </button>
+        {textoAplicado && (
+          <span className="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-2 rounded-md">
+            {produtosFiltrados.length} registro(s) encontrado(s)
+          </span>
         )}
       </div>
 
@@ -63,7 +85,7 @@ export function EstoqueConteudo({ produtos, movimentacoes }: Props) {
           <Package2 size={48} className="text-slate-200" />
           <div>
             <p className="font-medium text-slate-600">
-              {produtos.length ? 'Nenhum produto encontrado com esse filtro' : 'Nenhum produto com controle de estoque'}
+              {produtos.length ? 'Nenhum registro encontrado para os filtros informados.' : 'Nenhum produto com controle de estoque'}
             </p>
             {!produtos.length && (
               <p className="text-sm text-slate-400 mt-1">

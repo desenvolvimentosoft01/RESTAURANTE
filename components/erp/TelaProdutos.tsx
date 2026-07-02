@@ -76,30 +76,33 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   const [linhaSelecionada, setLinhaSelecionada] = useState<string | null>(null)
 
   // Filtros de pesquisa da grade — os mesmos campos que existem no cadastro
-  // (nome/descrição, categoria e os switches), com "Todos" como padrão para
-  // não esconder resultado nenhum enquanto o usuário não escolher um filtro.
-  const [buscaTexto, setBuscaTexto] = useState('')
-  const [buscaCategoria, setBuscaCategoria] = useState('todas')
-  const [buscaAtivo, setBuscaAtivo] = useState<FiltroTriState>('todos')
-  const [buscaIfood, setBuscaIfood] = useState<FiltroTriState>('todos')
-  const [buscaEstoque, setBuscaEstoque] = useState<FiltroTriState>('todos')
+  // (nome/descrição, categoria e os switches). São dois estados: o que está
+  // digitado (filtro) e o que foi efetivamente aplicado (filtroAplicado) —
+  // só muda ao clicar "Pesquisar" (ou Enter), não a cada tecla digitada.
+  const FILTRO_VAZIO = { texto: '', categoria: 'todas', ativo: 'todos' as FiltroTriState, ifood: 'todos' as FiltroTriState, estoque: 'todos' as FiltroTriState }
+  const [filtro, setFiltro] = useState(FILTRO_VAZIO)
+  const [filtroAplicado, setFiltroAplicado] = useState(FILTRO_VAZIO)
+  const [buscaFeita, setBuscaFeita] = useState(false)
 
   const produtosFiltrados = useMemo(() => {
     return produtos.filter((p) =>
-      (correspondeLike(p.nome, buscaTexto) || correspondeLike(p.descricao, buscaTexto)) &&
-      (buscaCategoria === 'todas' || p.categoria_id === buscaCategoria) &&
-      correspondeTriState(p.ativo, buscaAtivo) &&
-      correspondeTriState(p.disponivel_ifood, buscaIfood) &&
-      correspondeTriState(p.controla_estoque, buscaEstoque)
+      (correspondeLike(p.nome, filtroAplicado.texto) || correspondeLike(p.descricao, filtroAplicado.texto)) &&
+      (filtroAplicado.categoria === 'todas' || p.categoria_id === filtroAplicado.categoria) &&
+      correspondeTriState(p.ativo, filtroAplicado.ativo) &&
+      correspondeTriState(p.disponivel_ifood, filtroAplicado.ifood) &&
+      correspondeTriState(p.controla_estoque, filtroAplicado.estoque)
     )
-  }, [produtos, buscaTexto, buscaCategoria, buscaAtivo, buscaIfood, buscaEstoque])
+  }, [produtos, filtroAplicado])
+
+  function pesquisar() {
+    setFiltroAplicado(filtro)
+    setBuscaFeita(true)
+  }
 
   function limparBusca() {
-    setBuscaTexto('')
-    setBuscaCategoria('todas')
-    setBuscaAtivo('todos')
-    setBuscaIfood('todos')
-    setBuscaEstoque('todos')
+    setFiltro(FILTRO_VAZIO)
+    setFiltroAplicado(FILTRO_VAZIO)
+    setBuscaFeita(false)
   }
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isDirty } } = useForm<FormInput, unknown, FormOutput>({
@@ -270,9 +273,11 @@ export function TelaProdutos({ produtos, categorias }: Props) {
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Ex: coca ou %coca%1%litro%"
-                  value={buscaTexto}
-                  onChange={(e) => setBuscaTexto(e.target.value)}
+                  placeholder="Pesquisar produto..."
+                  title="Dica: use % para busca avançada, ex: %coca%1%litro%"
+                  value={filtro.texto}
+                  onChange={(e) => setFiltro((f) => ({ ...f, texto: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
                   className="h-8 pl-7 text-sm"
                 />
               </div>
@@ -280,8 +285,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             <div className="flex flex-col gap-1 min-w-[160px]">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Categoria</Label>
               <select
-                value={buscaCategoria}
-                onChange={(e) => setBuscaCategoria(e.target.value)}
+                value={filtro.categoria}
+                onChange={(e) => setFiltro((f) => ({ ...f, categoria: e.target.value }))}
                 className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
               >
                 <option value="todas">Todas</option>
@@ -291,8 +296,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Ativo</Label>
               <select
-                value={buscaAtivo}
-                onChange={(e) => setBuscaAtivo(e.target.value as FiltroTriState)}
+                value={filtro.ativo}
+                onChange={(e) => setFiltro((f) => ({ ...f, ativo: e.target.value as FiltroTriState }))}
                 className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
               >
                 <option value="todos">Todos</option>
@@ -303,8 +308,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">iFood</Label>
               <select
-                value={buscaIfood}
-                onChange={(e) => setBuscaIfood(e.target.value as FiltroTriState)}
+                value={filtro.ifood}
+                onChange={(e) => setFiltro((f) => ({ ...f, ifood: e.target.value as FiltroTriState }))}
                 className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
               >
                 <option value="todos">Todos</option>
@@ -315,8 +320,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Estoque</Label>
               <select
-                value={buscaEstoque}
-                onChange={(e) => setBuscaEstoque(e.target.value as FiltroTriState)}
+                value={filtro.estoque}
+                onChange={(e) => setFiltro((f) => ({ ...f, estoque: e.target.value as FiltroTriState }))}
                 className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
               >
                 <option value="todos">Todos</option>
@@ -325,13 +330,20 @@ export function TelaProdutos({ produtos, categorias }: Props) {
               </select>
             </div>
             <button
+              onClick={pesquisar}
+              className="h-8 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+            >
+              <Search size={13} />
+              Pesquisar
+            </button>
+            <button
               onClick={limparBusca}
               className="h-8 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors"
             >
               Limpar filtros
             </button>
-            <span className="text-xs text-slate-500 ml-auto">
-              <strong className="text-slate-700">{produtosFiltrados.length}</strong> de {produtos.length} registro(s) encontrado(s)
+            <span className="text-xs font-semibold text-slate-600 ml-auto bg-slate-200 px-3 py-1.5 rounded-md">
+              {produtosFiltrados.length} registro(s) encontrado(s)
             </span>
           </div>
 
@@ -339,7 +351,9 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
               <List size={40} strokeWidth={1} />
               <p className="text-sm">
-                {produtos.length ? 'Nenhum produto encontrado com esses filtros.' : 'Nenhum produto cadastrado. Clique em "Novo" para começar.'}
+                {buscaFeita || !produtos.length
+                  ? produtos.length ? 'Nenhum registro encontrado para os filtros informados.' : 'Nenhum produto cadastrado. Clique em "Novo" para começar.'
+                  : 'Nenhum registro encontrado.'}
               </p>
             </div>
           ) : (
@@ -464,7 +478,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                     {UNIDADES.map((u) => <SelectItem key={u.valor} value={u.valor}>{u.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-slate-400">Como o produto é comprado do fornecedor.</p>
+                <p className="text-[11px] text-slate-400 truncate" title="Como o produto é comprado do fornecedor.">Como é comprado do fornecedor</p>
               </div>
               <div className="col-span-4 space-y-1.5">
                 <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Unidade de Venda *</Label>
@@ -480,15 +494,13 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                     {UNIDADES.map((u) => <SelectItem key={u.valor} value={u.valor}>{u.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-slate-400">Como é vendido ao cliente. Estoque é controlado nesta unidade. Ex: KG/G permitem peso fracionado (0,500 kg).</p>
+                <p className="text-[11px] text-slate-400 truncate" title="Como é vendido ao cliente. Estoque é controlado nesta unidade. KG/G permitem peso fracionado, ex: 0,500 kg.">Usada na venda e no estoque</p>
               </div>
               <div className="col-span-4 space-y-1.5">
                 <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Fator de Conversão *</Label>
                 <Input type="number" step="0.0001" min="0.0001" {...register('fator_conversao')} className="h-9" />
                 {errors.fator_conversao && <p className="text-[11px] text-red-500">{errors.fator_conversao.message}</p>}
-                <p className="text-[11px] text-slate-400">
-                  Quantas unidades de venda equivalem a 1 de compra. Ex: 1 CX = 12 UN → fator 12.
-                </p>
+                <p className="text-[11px] text-slate-400 truncate" title="Quantas unidades de venda equivalem a 1 de compra. Ex: 1 CX = 12 UN → fator 12.">Ex: CX com 12 UN → fator 12</p>
               </div>
             </div>
 

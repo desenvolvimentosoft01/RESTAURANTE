@@ -37,16 +37,18 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
   const [salvando, setSalvando] = useState(false)
   const [linhaSelecionada, setLinhaSelecionada] = useState<string | null>(null)
 
-  const [buscaTexto, setBuscaTexto] = useState('')
-  const [buscaAtivo, setBuscaAtivo] = useState<FiltroTriState>('todos')
+  const FILTRO_VAZIO = { texto: '', ativo: 'todos' as FiltroTriState }
+  const [filtro, setFiltro] = useState(FILTRO_VAZIO)
+  const [filtroAplicado, setFiltroAplicado] = useState(FILTRO_VAZIO)
 
   const categoriasFiltradas = useMemo(() => {
     return categorias.filter((c) =>
-      correspondeLike(c.nome, buscaTexto) && correspondeTriState(c.ativo, buscaAtivo)
+      correspondeLike(c.nome, filtroAplicado.texto) && correspondeTriState(c.ativo, filtroAplicado.ativo)
     )
-  }, [categorias, buscaTexto, buscaAtivo])
+  }, [categorias, filtroAplicado])
 
-  function limparBusca() { setBuscaTexto(''); setBuscaAtivo('todos') }
+  function pesquisar() { setFiltroAplicado(filtro) }
+  function limparBusca() { setFiltro(FILTRO_VAZIO); setFiltroAplicado(FILTRO_VAZIO) }
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isDirty } } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
@@ -158,9 +160,10 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Ex: bebida"
-                  value={buscaTexto}
-                  onChange={(e) => setBuscaTexto(e.target.value)}
+                  placeholder="Pesquisar categoria..."
+                  value={filtro.texto}
+                  onChange={(e) => setFiltro((f) => ({ ...f, texto: e.target.value }))}
+                  onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
                   className="h-8 pl-7 text-sm"
                 />
               </div>
@@ -168,8 +171,8 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Ativa</Label>
               <select
-                value={buscaAtivo}
-                onChange={(e) => setBuscaAtivo(e.target.value as FiltroTriState)}
+                value={filtro.ativo}
+                onChange={(e) => setFiltro((f) => ({ ...f, ativo: e.target.value as FiltroTriState }))}
                 className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
               >
                 <option value="todos">Todas</option>
@@ -178,13 +181,20 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
               </select>
             </div>
             <button
+              onClick={pesquisar}
+              className="h-8 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+            >
+              <Search size={13} />
+              Pesquisar
+            </button>
+            <button
               onClick={limparBusca}
               className="h-8 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors"
             >
               Limpar filtros
             </button>
-            <span className="text-xs text-slate-500 ml-auto">
-              <strong className="text-slate-700">{categoriasFiltradas.length}</strong> de {categorias.length} registro(s) encontrado(s)
+            <span className="text-xs font-semibold text-slate-600 ml-auto bg-slate-200 px-3 py-1.5 rounded-md">
+              {categoriasFiltradas.length} registro(s) encontrado(s)
             </span>
           </div>
           <table className="w-full text-sm">

@@ -27,20 +27,23 @@ interface Props {
 export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPeriodo }: Props) {
   const [inicio, setInicio] = useState(inicioPeriodo)
   const [fim, setFim] = useState(fimPeriodo)
-  const [filtroTela, setFiltroTela] = useState('todas')
-  const [filtroAcao, setFiltroAcao] = useState('todas')
-  const [buscaTexto, setBuscaTexto] = useState('')
+  const FILTRO_VAZIO = { tela: 'todas', acao: 'todas', texto: '' }
+  const [filtro, setFiltro] = useState(FILTRO_VAZIO)
+  const [filtroAplicado, setFiltroAplicado] = useState(FILTRO_VAZIO)
   const [detalhe, setDetalhe] = useState<Auditoria | null>(null)
 
   const telas = Array.from(new Set(registros.map((r) => r.tela))).sort()
 
+  function pesquisar() { setFiltroAplicado(filtro) }
+  function limparBusca() { setFiltro(FILTRO_VAZIO); setFiltroAplicado(FILTRO_VAZIO) }
+
   const filtrados = registros.filter((r) => {
-    if (filtroTela !== 'todas' && r.tela !== filtroTela) return false
-    if (filtroAcao !== 'todas' && r.acao !== filtroAcao) return false
-    if (buscaTexto &&
-      !correspondeLike(r.usuario_email, buscaTexto) &&
-      !correspondeLike(r.tabela, buscaTexto) &&
-      !correspondeLike(r.registro_id, buscaTexto)
+    if (filtroAplicado.tela !== 'todas' && r.tela !== filtroAplicado.tela) return false
+    if (filtroAplicado.acao !== 'todas' && r.acao !== filtroAplicado.acao) return false
+    if (filtroAplicado.texto &&
+      !correspondeLike(r.usuario_email, filtroAplicado.texto) &&
+      !correspondeLike(r.tabela, filtroAplicado.texto) &&
+      !correspondeLike(r.registro_id, filtroAplicado.texto)
     ) return false
     return true
   })
@@ -51,8 +54,8 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
         <div className="flex flex-col gap-1 self-end">
           <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Tela</span>
           <select
-            value={filtroTela}
-            onChange={(e) => setFiltroTela(e.target.value)}
+            value={filtro.tela}
+            onChange={(e) => setFiltro((f) => ({ ...f, tela: e.target.value }))}
             className="h-8 px-3 text-sm border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
           >
             <option value="todas">Todas as telas</option>
@@ -62,32 +65,46 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
         <div className="flex flex-col gap-1 self-end">
           <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Ação</span>
           <select
-            value={filtroAcao}
-            onChange={(e) => setFiltroAcao(e.target.value)}
+            value={filtro.acao}
+            onChange={(e) => setFiltro((f) => ({ ...f, acao: e.target.value }))}
             className="h-8 px-3 text-sm border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
           >
             <option value="todas">Todas as ações</option>
             {Object.entries(ACAO_LABEL).map(([v, a]) => <option key={v} value={v}>{a.label}</option>)}
           </select>
         </div>
-        <div className="flex flex-col gap-1 self-end min-w-[220px]">
+        <div className="flex flex-col gap-1 self-end min-w-55">
           <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Usuário / Tabela / Registro</span>
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Pesquisar..."
-              value={buscaTexto}
-              onChange={(e) => setBuscaTexto(e.target.value)}
+              value={filtro.texto}
+              onChange={(e) => setFiltro((f) => ({ ...f, texto: e.target.value }))}
+              onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
               className="h-8 pl-7 text-sm"
             />
           </div>
         </div>
+        <button
+          onClick={pesquisar}
+          className="h-8 self-end flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+        >
+          <Search size={13} />
+          Pesquisar
+        </button>
+        <button
+          onClick={limparBusca}
+          className="h-8 self-end px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+        >
+          Limpar
+        </button>
       </FiltroRelatorio>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 bg-slate-50 border-b border-slate-200">
           <h3 className="font-semibold text-slate-700 text-sm">Registros de auditoria</h3>
-          <span className="text-xs text-slate-400">{filtrados.length} registro(s)</span>
+          <span className="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-1.5 rounded-md">{filtrados.length} registro(s) encontrado(s)</span>
         </div>
         <table className="w-full">
           <thead>

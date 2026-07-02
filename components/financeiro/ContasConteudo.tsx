@@ -14,12 +14,16 @@ import { Input } from '@/components/ui/input'
 import type { Conta } from '@/types/database'
 
 export function ContasConteudo({ contas }: { contas: Conta[] }) {
-  const [buscaTexto, setBuscaTexto] = useState('')
+  const [texto, setTexto] = useState('')
+  const [textoAplicado, setTextoAplicado] = useState('')
 
   const filtradas = useMemo(
-    () => contas.filter((c) => correspondeLike(c.descricao, buscaTexto) || correspondeLike(c.categoria, buscaTexto)),
-    [contas, buscaTexto]
+    () => contas.filter((c) => correspondeLike(c.descricao, textoAplicado) || correspondeLike(c.categoria, textoAplicado)),
+    [contas, textoAplicado]
   )
+
+  function pesquisar() { setTextoAplicado(texto) }
+  function limparBusca() { setTexto(''); setTextoAplicado('') }
 
   const apagar = filtradas.filter((c) => c.tipo === 'pagar' && !c.pago)
   const areceber = filtradas.filter((c) => c.tipo === 'receber' && !c.pago)
@@ -30,16 +34,34 @@ export function ContasConteudo({ contas }: { contas: Conta[] }) {
 
   return (
     <div className="space-y-8">
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <Input
-          placeholder="Pesquisar por descrição ou categoria..."
-          value={buscaTexto}
-          onChange={(e) => setBuscaTexto(e.target.value)}
-          className="pl-9 h-9"
-        />
-        {buscaTexto && (
-          <span className="text-xs text-slate-500 mt-1 block">{filtradas.length} de {contas.length} conta(s) encontrada(s)</span>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative max-w-sm flex-1 min-w-55">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Pesquisar por descrição ou categoria..."
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
+            className="pl-9 h-9"
+          />
+        </div>
+        <button
+          onClick={pesquisar}
+          className="h-9 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+        >
+          <Search size={13} />
+          Pesquisar
+        </button>
+        <button
+          onClick={limparBusca}
+          className="h-9 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+        >
+          Limpar
+        </button>
+        {textoAplicado && (
+          <span className="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-2 rounded-md">
+            {filtradas.length} registro(s) encontrado(s)
+          </span>
         )}
       </div>
 
@@ -56,11 +78,16 @@ export function ContasConteudo({ contas }: { contas: Conta[] }) {
         </div>
       </div>
 
-      <TabelaContas titulo="Contas a Pagar" contas={apagar} />
-      <TabelaContas titulo="Contas a Receber" contas={areceber} />
-
-      {pagas.length > 0 && (
-        <TabelaContas titulo="Pagas / Recebidas" contas={pagas} />
+      {textoAplicado && !filtradas.length ? (
+        <p className="text-sm text-slate-400 text-center py-10">Nenhum registro encontrado para "{textoAplicado}".</p>
+      ) : (
+        <>
+          <TabelaContas titulo="Contas a Pagar" contas={apagar} />
+          <TabelaContas titulo="Contas a Receber" contas={areceber} />
+          {pagas.length > 0 && (
+            <TabelaContas titulo="Pagas / Recebidas" contas={pagas} />
+          )}
+        </>
       )}
     </div>
   )

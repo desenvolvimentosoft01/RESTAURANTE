@@ -29,7 +29,11 @@ interface Props {
 export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
   const pedidos = usePedidosRealtime(inicial)
   const contadorRef = useRef(pedidos.length)
-  const [buscaTexto, setBuscaTexto] = useState('')
+  const [texto, setTexto] = useState('')
+  const [textoAplicado, setTextoAplicado] = useState('')
+
+  function pesquisar() { setTextoAplicado(texto) }
+  function limparBusca() { setTexto(''); setTextoAplicado('') }
 
   useEffect(() => {
     const novos = pedidos.filter(
@@ -54,9 +58,9 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
   const pedidosFiltrados = pedidos
     .filter((p) => filtro === 'todos' || p.status === filtro)
     .filter((p) =>
-      correspondeLike(p.nome_cliente, buscaTexto) ||
-      correspondeLike(p.entregador, buscaTexto) ||
-      (p.itens ?? []).some((i) => correspondeLike(i.nome_produto, buscaTexto))
+      correspondeLike(p.nome_cliente, textoAplicado) ||
+      correspondeLike(p.entregador, textoAplicado) ||
+      (p.itens ?? []).some((i) => correspondeLike(i.nome_produto, textoAplicado))
     )
 
   const contagemPorStatus = (status: StatusPedido | 'todos') =>
@@ -66,14 +70,30 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <Input
-          placeholder="Pesquisar por cliente, entregador ou produto..."
-          value={buscaTexto}
-          onChange={(e) => setBuscaTexto(e.target.value)}
-          className="pl-9 h-9"
-        />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative max-w-sm flex-1 min-w-55">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Pesquisar por cliente, entregador ou produto..."
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && pesquisar()}
+            className="pl-9 h-9"
+          />
+        </div>
+        <button
+          onClick={pesquisar}
+          className="h-9 flex items-center gap-1.5 px-4 text-xs font-bold text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors"
+        >
+          <Search size={13} />
+          Pesquisar
+        </button>
+        <button
+          onClick={limparBusca}
+          className="h-9 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+        >
+          Limpar
+        </button>
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -101,13 +121,15 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
           )
         })}
         </div>
-        <span className="text-xs text-slate-500">{pedidosFiltrados.length} pedido(s) encontrado(s)</span>
+        <span className="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-1.5 rounded-md">
+          {pedidosFiltrados.length} registro(s) encontrado(s)
+        </span>
       </div>
 
       {pedidosFiltrados.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
           <p className="text-4xl mb-2">📋</p>
-          <p className="text-sm">Nenhum pedido encontrado.</p>
+          <p className="text-sm">Nenhum registro encontrado.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

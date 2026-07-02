@@ -32,12 +32,12 @@ export function CarrinhoVenda({ onFinalizar }: Props) {
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto space-y-1.5">
         {itens.map((item) => {
-          const fracionado = UNIDADES_FRACIONADAS.includes(item.produto.unidade_medida)
+          const fracionado = UNIDADES_FRACIONADAS.includes(item.produto.unidade_venda)
           return (
             <div key={item.produto.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-white">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800 truncate leading-tight">{item.produto.nome}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{formatarMoeda(item.produto.preco)}/{item.produto.unidade_medida}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{formatarMoeda(item.produto.preco)}/{item.produto.unidade_venda}</p>
               </div>
               {fracionado ? (
                 <input

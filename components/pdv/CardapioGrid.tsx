@@ -28,7 +28,7 @@ export function CardapioGrid({ produtos, categorias }: Props) {
     : produtos
 
   function clicarProduto(produto: Produto) {
-    if (UNIDADES_FRACIONADAS.includes(produto.unidade_medida)) {
+    if (UNIDADES_FRACIONADAS.includes(produto.unidade_venda)) {
       setProdutoPesando(produto)
       setPeso('')
       return
@@ -91,11 +91,11 @@ export function CardapioGrid({ produtos, categorias }: Props) {
             )}
             <p className="text-slate-900 font-bold mt-2.5 text-base">
               {formatarMoeda(produto.preco)}
-              {produto.unidade_medida !== 'UN' && <span className="text-xs font-normal text-slate-400">/{produto.unidade_medida}</span>}
+              {produto.unidade_venda !== 'UN' && <span className="text-xs font-normal text-slate-400">/{produto.unidade_venda}</span>}
             </p>
             {produto.controla_estoque && (
               <p className={`text-[10px] mt-1 font-medium ${produto.estoque_atual <= produto.estoque_minimo ? 'text-red-500' : 'text-slate-400'}`}>
-                Estoque: {produto.estoque_atual} {produto.unidade_medida}
+                Estoque: {produto.estoque_atual} {produto.unidade_venda}
               </p>
             )}
           </button>
@@ -113,7 +113,7 @@ export function CardapioGrid({ produtos, categorias }: Props) {
             <DialogTitle>{produtoPesando?.nome}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="peso">Quantidade ({produtoPesando?.unidade_medida})</Label>
+            <Label htmlFor="peso">Quantidade ({produtoPesando?.unidade_venda})</Label>
             <Input
               id="peso"
               type="number"

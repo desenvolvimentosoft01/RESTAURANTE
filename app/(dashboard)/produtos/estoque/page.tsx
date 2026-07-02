@@ -10,13 +10,13 @@ export default async function EstoqueProdutosPage() {
 
   const { data: produtos } = await supabase
     .from('produtos')
-    .select('id, nome, estoque_atual, estoque_minimo, controla_estoque, ativo, unidade_medida')
+    .select('id, nome, estoque_atual, estoque_minimo, controla_estoque, ativo, unidade_venda')
     .eq('controla_estoque', true)
     .order('nome')
 
   const { data: movimentacoes } = await supabase
     .from('movimentacoes_estoque_produto')
-    .select('*, produto:produtos(nome, unidade_medida)')
+    .select('*, produto:produtos(nome, unidade_venda)')
     .order('created_at', { ascending: false })
     .limit(30)
 
@@ -61,10 +61,10 @@ export default async function EstoqueProdutosPage() {
                     </td>
                     <td className="px-5 py-4 text-center">
                       <span className={`text-lg font-bold ${alerta ? 'text-red-600' : 'text-slate-800'}`}>
-                        {p.estoque_atual} {p.unidade_medida}
+                        {p.estoque_atual} {p.unidade_venda}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-center text-sm text-slate-500">{p.estoque_minimo} {p.unidade_medida}</td>
+                    <td className="px-5 py-4 text-center text-sm text-slate-500">{p.estoque_minimo} {p.unidade_venda}</td>
                     <td className="px-5 py-4 text-center">
                       {alerta ? (
                         <Badge className="bg-red-100 text-red-700 hover:bg-red-100">⚠️ Baixo</Badge>
@@ -73,7 +73,7 @@ export default async function EstoqueProdutosPage() {
                       )}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <AjusteEstoqueBtn produtoId={p.id} nomeProduto={p.nome} estoqueAtual={p.estoque_atual} unidadeMedida={p.unidade_medida} />
+                      <AjusteEstoqueBtn produtoId={p.id} nomeProduto={p.nome} estoqueAtual={p.estoque_atual} unidadeMedida={p.unidade_venda} />
                     </td>
                   </tr>
                 )
@@ -101,7 +101,7 @@ export default async function EstoqueProdutosPage() {
                 {movimentacoes.map((m) => (
                   <tr key={m.id} className="hover:bg-slate-50">
                     <td className="px-5 py-3 text-xs text-slate-400">{formatarDataCurta(m.created_at)}</td>
-                    <td className="px-5 py-3 text-sm text-slate-700">{(m.produto as { nome: string; unidade_medida: string } | null)?.nome ?? '—'}</td>
+                    <td className="px-5 py-3 text-sm text-slate-700">{(m.produto as { nome: string; unidade_venda: string } | null)?.nome ?? '—'}</td>
                     <td className="px-5 py-3 text-center">
                       <Badge
                         className={
@@ -114,7 +114,7 @@ export default async function EstoqueProdutosPage() {
                       </Badge>
                     </td>
                     <td className="px-5 py-3 text-center font-semibold text-slate-800">
-                      {m.quantidade} {(m.produto as { nome: string; unidade_medida: string } | null)?.unidade_medida ?? ''}
+                      {m.quantidade} {(m.produto as { nome: string; unidade_venda: string } | null)?.unidade_venda ?? ''}
                     </td>
                     <td className="px-5 py-3 text-sm text-slate-500">{m.motivo ?? '—'}</td>
                   </tr>

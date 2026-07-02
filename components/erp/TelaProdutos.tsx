@@ -40,7 +40,9 @@ const schema = z.object({
   descricao: z.string().optional(),
   categoria_id: z.string().min(1, 'Categoria obrigatória'),
   preco: z.coerce.number().min(0.01, 'Preço obrigatório'),
-  unidade_medida: z.enum(['UN', 'KG', 'G', 'L', 'ML', 'PC', 'CX', 'FT']),
+  unidade_venda: z.enum(['UN', 'KG', 'G', 'L', 'ML', 'PC', 'CX', 'FT']),
+  unidade_compra: z.enum(['UN', 'KG', 'G', 'L', 'ML', 'PC', 'CX', 'FT']),
+  fator_conversao: z.coerce.number().positive('Informe um fator válido'),
   ativo: z.boolean(),
   disponivel_ifood: z.boolean(),
   controla_estoque: z.boolean(),
@@ -54,7 +56,9 @@ type FormOutput = z.output<typeof schema>
 const FORM_VAZIO: FormInput = {
   nome: '', descricao: '', categoria_id: '',
   preco: '' as unknown as number,
-  unidade_medida: 'UN',
+  unidade_venda: 'UN',
+  unidade_compra: 'UN',
+  fator_conversao: 1,
   ativo: true, disponivel_ifood: false,
   controla_estoque: false, estoque_atual: 0, estoque_minimo: 0,
 }
@@ -76,8 +80,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   })
 
   const controlaEstoque = watch('controla_estoque')
-  const unidadeMedida = watch('unidade_medida')
-  const passoEstoque = UNIDADES_FRACIONADAS.includes(unidadeMedida) ? '0.001' : '1'
+  const unidadeVenda = watch('unidade_venda')
+  const passoEstoque = UNIDADES_FRACIONADAS.includes(unidadeVenda) ? '0.001' : '1'
 
   const carregarProduto = useCallback((p: Produto) => {
     setProdutoEditando(p)
@@ -87,7 +91,9 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       descricao: p.descricao ?? '',
       categoria_id: p.categoria_id,
       preco: p.preco,
-      unidade_medida: p.unidade_medida,
+      unidade_venda: p.unidade_venda,
+      unidade_compra: p.unidade_compra,
+      fator_conversao: p.fator_conversao,
       ativo: p.ativo,
       disponivel_ifood: p.disponivel_ifood,
       controla_estoque: p.controla_estoque,
@@ -270,7 +276,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                       <td className="px-4 py-2.5 text-right font-bold text-slate-800">{formatarMoeda(p.preco)}</td>
                       <td className="px-4 py-2.5 text-center">
                         {p.controla_estoque
-                          ? <span className={`font-bold ${alerta ? 'text-red-600' : 'text-slate-700'}`}>{p.estoque_atual} {p.unidade_medida}{alerta && ' ⚠'}</span>
+                          ? <span className={`font-bold ${alerta ? 'text-red-600' : 'text-slate-700'}`}>{p.estoque_atual} {p.unidade_venda}{alerta && ' ⚠'}</span>
                           : <span className="text-slate-300 text-[11px]">—</span>
                         }
                       </td>
@@ -339,14 +345,14 @@ export function TelaProdutos({ produtos, categorias }: Props) {
               </div>
             </div>
 
-            {/* Linha 1b — Unidade de medida */}
+            {/* Linha 1b — Unidade de compra x venda */}
             <div className="grid grid-cols-12 gap-4 items-start">
               <div className="col-span-4 space-y-1.5">
-                <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Unidade de Medida *</Label>
+                <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Unidade de Compra *</Label>
                 <Select
-                  defaultValue={produtoEditando?.unidade_medida ?? 'UN'}
-                  key={`un-${produtoEditando?.id ?? 'novo'}`}
-                  onValueChange={(v) => setValue('unidade_medida', v as UnidadeMedida)}
+                  defaultValue={produtoEditando?.unidade_compra ?? 'UN'}
+                  key={`uc-${produtoEditando?.id ?? 'novo'}`}
+                  onValueChange={(v) => setValue('unidade_compra', v as UnidadeMedida)}
                 >
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Selecione..." />
@@ -355,7 +361,31 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                     {UNIDADES.map((u) => <SelectItem key={u.valor} value={u.valor}>{u.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-slate-400">Ex: KG permite vender/estocar em peso fracionado (0,750 kg).</p>
+                <p className="text-[11px] text-slate-400">Como o produto é comprado do fornecedor.</p>
+              </div>
+              <div className="col-span-4 space-y-1.5">
+                <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Unidade de Venda *</Label>
+                <Select
+                  defaultValue={produtoEditando?.unidade_venda ?? 'UN'}
+                  key={`uv-${produtoEditando?.id ?? 'novo'}`}
+                  onValueChange={(v) => setValue('unidade_venda', v as UnidadeMedida)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UNIDADES.map((u) => <SelectItem key={u.valor} value={u.valor}>{u.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-slate-400">Como é vendido ao cliente. Estoque é controlado nesta unidade. Ex: KG/G permitem peso fracionado (0,500 kg).</p>
+              </div>
+              <div className="col-span-4 space-y-1.5">
+                <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Fator de Conversão *</Label>
+                <Input type="number" step="0.0001" min="0.0001" {...register('fator_conversao')} className="h-9" />
+                {errors.fator_conversao && <p className="text-[11px] text-red-500">{errors.fator_conversao.message}</p>}
+                <p className="text-[11px] text-slate-400">
+                  Quantas unidades de venda equivalem a 1 de compra. Ex: 1 CX = 12 UN → fator 12.
+                </p>
               </div>
             </div>
 
@@ -404,11 +434,11 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             {controlaEstoque && (
               <div className="grid grid-cols-3 gap-4 bg-amber-50 rounded-lg border border-amber-200 p-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Atual ({unidadeMedida})</Label>
+                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Atual ({unidadeVenda})</Label>
                   <Input type="number" min="0" step={passoEstoque} {...register('estoque_atual')} className="h-9 bg-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Mínimo ({unidadeMedida})</Label>
+                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Mínimo ({unidadeVenda})</Label>
                   <Input type="number" min="0" step={passoEstoque} {...register('estoque_minimo')} className="h-9 bg-white" />
                 </div>
                 <div className="flex items-end pb-0.5">

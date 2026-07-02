@@ -36,7 +36,9 @@ export interface Produto {
   controla_estoque: boolean
   estoque_atual: number
   estoque_minimo: number
-  unidade_medida: UnidadeMedida
+  unidade_venda: UnidadeMedida
+  unidade_compra: UnidadeMedida
+  fator_conversao: number
   categoria?: Categoria
 }
 

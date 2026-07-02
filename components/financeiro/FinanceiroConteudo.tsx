@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { formatarDataCurta, formatarMoeda } from '@/lib/utils'
@@ -72,6 +73,15 @@ export function FinanceiroConteudo() {
   }, [periodo, filtroTipo])
 
   useEffect(() => { carregarDados() }, [carregarDados])
+
+  async function excluirDespesa(id: string, descricao: string) {
+    if (!confirm(`Excluir o lançamento "${descricao}"?`)) return
+    const supabase = createClient()
+    const { error } = await supabase.from('transacoes').delete().eq('id', id)
+    if (error) { toast.error('Erro ao excluir'); return }
+    toast.success('Lançamento excluído')
+    carregarDados()
+  }
 
   const periodos: { valor: Periodo; label: string }[] = [
     { valor: 'hoje', label: 'Hoje' },
@@ -160,12 +170,13 @@ export function FinanceiroConteudo() {
                 <TableHead>Categoria</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {transacoes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-slate-500 py-8">
+                  <TableCell colSpan={6} className="text-center text-slate-500 py-8">
                     Nenhuma transação encontrada.
                   </TableCell>
                 </TableRow>
@@ -182,6 +193,19 @@ export function FinanceiroConteudo() {
                     </TableCell>
                     <TableCell className={`text-right font-semibold ${t.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
                       {t.tipo === 'saida' ? '−' : '+'}{formatarMoeda(t.valor)}
+                    </TableCell>
+                    <TableCell>
+                      {/* Lançamentos vindos de venda (pedido_id preenchido) não podem ser
+                          excluídos aqui — fazem parte do histórico do pedido. */}
+                      {!t.pedido_id && (
+                        <button
+                          onClick={() => excluirDespesa(t.id, t.descricao)}
+                          className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+                          title="Excluir lançamento"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

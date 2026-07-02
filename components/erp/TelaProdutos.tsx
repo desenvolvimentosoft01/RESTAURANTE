@@ -117,6 +117,27 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   async function excluir(id: string, nome: string) {
     if (!confirm(`Excluir o produto "${nome}"?`)) return
     const supabase = createClient()
+
+    // Produto com histórico de venda/movimentação não pode ser excluído
+    // (apagaria o histórico); nesse caso oferece inativar do mix.
+    const [{ count: emPedidos }, { count: emMovimentacoes }] = await Promise.all([
+      supabase.from('itens_pedido').select('id', { count: 'exact', head: true }).eq('produto_id', id),
+      supabase.from('movimentacoes_estoque_produto').select('id', { count: 'exact', head: true }).eq('produto_id', id),
+    ])
+
+    if ((emPedidos ?? 0) > 0 || (emMovimentacoes ?? 0) > 0) {
+      const inativar = confirm(
+        `O produto "${nome}" já teve movimentação de estoque ou venda e não pode ser excluído, pois isso apagaria o histórico.\n\nDeseja inativá-lo do mix da loja em vez disso?`
+      )
+      if (!inativar) return
+      const { error } = await supabase.from('produtos').update({ ativo: false }).eq('id', id)
+      if (error) { toast.error('Erro ao inativar'); return }
+      toast.success('Produto inativado do mix')
+      if (linhaSelecionada === id) cancelar()
+      router.refresh()
+      return
+    }
+
     const { error } = await supabase.from('produtos').delete().eq('id', id)
     if (error) { toast.error('Erro ao excluir'); return }
     toast.success('Produto excluído')

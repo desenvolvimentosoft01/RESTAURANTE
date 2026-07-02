@@ -67,8 +67,27 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
   async function excluir(id: string, nome: string) {
     if (!confirm(`Excluir a categoria "${nome}"?`)) return
     const supabase = createClient()
+
+    const { count: produtosVinculados } = await supabase
+      .from('produtos')
+      .select('id', { count: 'exact', head: true })
+      .eq('categoria_id', id)
+
+    if ((produtosVinculados ?? 0) > 0) {
+      const inativar = confirm(
+        `A categoria "${nome}" possui produtos cadastrados. Excluí-la deixaria esses produtos sem categoria.\n\nDeseja inativar a categoria em vez de excluir?`
+      )
+      if (!inativar) return
+      const { error } = await supabase.from('categorias').update({ ativo: false }).eq('id', id)
+      if (error) { toast.error('Erro ao inativar'); return }
+      toast.success('Categoria inativada')
+      if (linhaSelecionada === id) cancelar()
+      router.refresh()
+      return
+    }
+
     const { error } = await supabase.from('categorias').delete().eq('id', id)
-    if (error) { toast.error('Erro ao excluir. Verifique se há produtos nesta categoria.'); return }
+    if (error) { toast.error('Erro ao excluir'); return }
     toast.success('Categoria excluída')
     if (linhaSelecionada === id) cancelar()
     router.refresh()

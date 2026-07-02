@@ -6,6 +6,7 @@ import { Bike, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { correspondeLike } from '@/lib/busca'
+import { formatarMoeda } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { usePedidosRealtime } from '@/hooks/usePedidosRealtime'
 import { BotaoImprimir } from '@/components/ui/BotaoImprimir'
@@ -110,7 +111,7 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
         <BotaoImprimir />
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
         <div className="flex gap-2 flex-wrap">
         {ABAS.map((aba) => {
           const count = contagemPorStatus(aba.valor)
@@ -146,12 +147,57 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
           <p className="text-sm">Nenhum registro encontrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 print:hidden">
           {pedidosFiltrados.map((pedido) => (
             <CardPedido key={pedido.id} pedido={pedido} />
           ))}
         </div>
       )}
+
+      {/* Versão de impressão: os cards são visuais/interativos demais para
+          papel — na impressão sai uma tabela convencional, como nas demais telas. */}
+      <div className="hidden print:block">
+        <h2 className="text-lg font-bold text-slate-800 mb-1">Pedidos</h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Emitido em {new Date().toLocaleString('pt-BR')} — {pedidosFiltrados.length} pedido(s)
+        </p>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b-2 border-slate-800 text-left text-[11px] uppercase tracking-wide">
+              <th className="py-1.5 pr-2">Data/Hora</th>
+              <th className="py-1.5 pr-2">Cliente</th>
+              <th className="py-1.5 pr-2">Canal</th>
+              <th className="py-1.5 pr-2">Status</th>
+              <th className="py-1.5 pr-2">Itens</th>
+              <th className="py-1.5 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pedidosFiltrados.map((p) => (
+              <tr key={p.id} className="border-b border-slate-200 align-top">
+                <td className="py-1.5 pr-2 whitespace-nowrap">
+                  {new Date(p.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </td>
+                <td className="py-1.5 pr-2">{p.nome_cliente ?? '—'}</td>
+                <td className="py-1.5 pr-2">{p.origem === 'ifood' ? 'iFood' : 'Balcão'}</td>
+                <td className="py-1.5 pr-2 capitalize">{p.status.replace('_', ' ')}</td>
+                <td className="py-1.5 pr-2">
+                  {(p.itens ?? []).map((i) => `${i.quantidade}× ${i.nome_produto}`).join(', ') || '—'}
+                </td>
+                <td className="py-1.5 text-right font-semibold whitespace-nowrap">{formatarMoeda(p.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-slate-800">
+              <td colSpan={5} className="py-2 font-bold">Total (excluindo cancelados)</td>
+              <td className="py-2 text-right font-bold whitespace-nowrap">
+                {formatarMoeda(pedidosFiltrados.filter((p) => p.status !== 'cancelado').reduce((s, p) => s + p.total, 0))}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   )
 }

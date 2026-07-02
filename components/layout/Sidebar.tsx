@@ -37,6 +37,7 @@ const menu: Item[] = [
       { href: '/produtos',            label: 'Cadastro de Produtos', icone: '🍽️' },
       { href: '/produtos/categorias', label: 'Categorias',           icone: '🏷️' },
       { href: '/produtos/estoque',    label: 'Estoque',              icone: '📦' },
+      { href: '/produtos/inativos',   label: 'Produtos Inativos',    icone: '🚫' },
     ],
   },
   {

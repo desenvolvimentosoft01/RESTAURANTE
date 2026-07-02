@@ -1,15 +1,16 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-import { Eraser, FileText, FilePlus, List, Pencil, Save, Trash2, X } from 'lucide-react'
+import { Eraser, FileText, FilePlus, List, Pencil, Save, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { formatarMoeda } from '@/lib/utils'
+import { correspondeLike, correspondeTriState, type FiltroTriState } from '@/lib/busca'
 import { createClient } from '@/lib/supabase/client'
 import { registrarAuditoria } from '@/lib/auditoria'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
@@ -73,6 +74,33 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [linhaSelecionada, setLinhaSelecionada] = useState<string | null>(null)
+
+  // Filtros de pesquisa da grade — os mesmos campos que existem no cadastro
+  // (nome/descrição, categoria e os switches), com "Todos" como padrão para
+  // não esconder resultado nenhum enquanto o usuário não escolher um filtro.
+  const [buscaTexto, setBuscaTexto] = useState('')
+  const [buscaCategoria, setBuscaCategoria] = useState('todas')
+  const [buscaAtivo, setBuscaAtivo] = useState<FiltroTriState>('todos')
+  const [buscaIfood, setBuscaIfood] = useState<FiltroTriState>('todos')
+  const [buscaEstoque, setBuscaEstoque] = useState<FiltroTriState>('todos')
+
+  const produtosFiltrados = useMemo(() => {
+    return produtos.filter((p) =>
+      (correspondeLike(p.nome, buscaTexto) || correspondeLike(p.descricao, buscaTexto)) &&
+      (buscaCategoria === 'todas' || p.categoria_id === buscaCategoria) &&
+      correspondeTriState(p.ativo, buscaAtivo) &&
+      correspondeTriState(p.disponivel_ifood, buscaIfood) &&
+      correspondeTriState(p.controla_estoque, buscaEstoque)
+    )
+  }, [produtos, buscaTexto, buscaCategoria, buscaAtivo, buscaIfood, buscaEstoque])
+
+  function limparBusca() {
+    setBuscaTexto('')
+    setBuscaCategoria('todas')
+    setBuscaAtivo('todos')
+    setBuscaIfood('todos')
+    setBuscaEstoque('todos')
+  }
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isDirty } } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
@@ -234,10 +262,85 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       {/* Conteúdo */}
       {aba === 'grade' && (
         <div className="overflow-auto flex-1">
-          {!produtos.length ? (
+          {/* Pesquisa — usa os mesmos campos do cadastro como filtro da grade.
+              A grade em si é somente leitura; edição só acontece na aba Cadastro. */}
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200">
+            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Nome ou Descrição</Label>
+              <div className="relative">
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Ex: coca ou %coca%1%litro%"
+                  value={buscaTexto}
+                  onChange={(e) => setBuscaTexto(e.target.value)}
+                  className="h-8 pl-7 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 min-w-[160px]">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Categoria</Label>
+              <select
+                value={buscaCategoria}
+                onChange={(e) => setBuscaCategoria(e.target.value)}
+                className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+              >
+                <option value="todas">Todas</option>
+                {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Ativo</Label>
+              <select
+                value={buscaAtivo}
+                onChange={(e) => setBuscaAtivo(e.target.value as FiltroTriState)}
+                className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+              >
+                <option value="todos">Todos</option>
+                <option value="sim">Ativo</option>
+                <option value="nao">Inativo</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">iFood</Label>
+              <select
+                value={buscaIfood}
+                onChange={(e) => setBuscaIfood(e.target.value as FiltroTriState)}
+                className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+              >
+                <option value="todos">Todos</option>
+                <option value="sim">Disponível</option>
+                <option value="nao">Indisponível</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Estoque</Label>
+              <select
+                value={buscaEstoque}
+                onChange={(e) => setBuscaEstoque(e.target.value as FiltroTriState)}
+                className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+              >
+                <option value="todos">Todos</option>
+                <option value="sim">Controla</option>
+                <option value="nao">Não controla</option>
+              </select>
+            </div>
+            <button
+              onClick={limparBusca}
+              className="h-8 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors"
+            >
+              Limpar filtros
+            </button>
+            <span className="text-xs text-slate-500 ml-auto">
+              <strong className="text-slate-700">{produtosFiltrados.length}</strong> de {produtos.length} registro(s) encontrado(s)
+            </span>
+          </div>
+
+          {!produtosFiltrados.length ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
               <List size={40} strokeWidth={1} />
-              <p className="text-sm">Nenhum produto cadastrado. Clique em "Novo" para começar.</p>
+              <p className="text-sm">
+                {produtos.length ? 'Nenhum produto encontrado com esses filtros.' : 'Nenhum produto cadastrado. Clique em "Novo" para começar.'}
+              </p>
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -252,7 +355,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {produtos.map((p, i) => {
+                {produtosFiltrados.map((p, i) => {
                   const selecionado = linhaSelecionada === p.id
                   const alerta = p.controla_estoque && p.estoque_atual <= p.estoque_minimo
                   return (
@@ -456,7 +559,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400">
         <span>
           {aba === 'grade'
-            ? `${produtos.length} registro(s) ${linhaSelecionada ? '• 1 selecionado' : ''}`
+            ? `${produtosFiltrados.length} de ${produtos.length} registro(s) ${linhaSelecionada ? '• 1 selecionado' : ''}`
             : produtoEditando ? `Editando: ${produtoEditando.id.slice(0, 8)}...` : 'Novo registro'
           }
         </span>

@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { Bike } from 'lucide-react'
+import { Bike, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { correspondeLike } from '@/lib/busca'
 import { createClient } from '@/lib/supabase/client'
 import { usePedidosRealtime } from '@/hooks/usePedidosRealtime'
+import { Input } from '@/components/ui/input'
 import { CardPedido } from './CardPedido'
 import type { Pedido, StatusPedido } from '@/types/database'
 
@@ -27,6 +29,7 @@ interface Props {
 export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
   const pedidos = usePedidosRealtime(inicial)
   const contadorRef = useRef(pedidos.length)
+  const [buscaTexto, setBuscaTexto] = useState('')
 
   useEffect(() => {
     const novos = pedidos.filter(
@@ -48,9 +51,13 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
     contadorRef.current = pedidos.length
   }, [pedidos])
 
-  const pedidosFiltrados = filtro === 'todos'
-    ? pedidos
-    : pedidos.filter((p) => p.status === filtro)
+  const pedidosFiltrados = pedidos
+    .filter((p) => filtro === 'todos' || p.status === filtro)
+    .filter((p) =>
+      correspondeLike(p.nome_cliente, buscaTexto) ||
+      correspondeLike(p.entregador, buscaTexto) ||
+      (p.itens ?? []).some((i) => correspondeLike(i.nome_produto, buscaTexto))
+    )
 
   const contagemPorStatus = (status: StatusPedido | 'todos') =>
     status === 'todos'
@@ -59,7 +66,18 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap">
+      <div className="relative max-w-sm">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Input
+          placeholder="Pesquisar por cliente, entregador ou produto..."
+          value={buscaTexto}
+          onChange={(e) => setBuscaTexto(e.target.value)}
+          className="pl-9 h-9"
+        />
+      </div>
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex gap-2 flex-wrap">
         {ABAS.map((aba) => {
           const count = contagemPorStatus(aba.valor)
           const ativo = filtro === aba.valor
@@ -82,6 +100,8 @@ export function PedidosConteudo({ inicial, filtro, onFiltro }: Props) {
             </button>
           )
         })}
+        </div>
+        <span className="text-xs text-slate-500">{pedidosFiltrados.length} pedido(s) encontrado(s)</span>
       </div>
 
       {pedidosFiltrados.length === 0 ? (

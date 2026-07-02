@@ -1,14 +1,15 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-import { Eraser, FileText, FilePlus, List, Pencil, Save, Trash2, X } from 'lucide-react'
+import { Eraser, FileText, FilePlus, List, Pencil, Save, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { correspondeLike, correspondeTriState, type FiltroTriState } from '@/lib/busca'
 import { createClient } from '@/lib/supabase/client'
 import { registrarAuditoria } from '@/lib/auditoria'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
@@ -35,6 +36,17 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
   const [editando, setEditando] = useState<Categoria | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [linhaSelecionada, setLinhaSelecionada] = useState<string | null>(null)
+
+  const [buscaTexto, setBuscaTexto] = useState('')
+  const [buscaAtivo, setBuscaAtivo] = useState<FiltroTriState>('todos')
+
+  const categoriasFiltradas = useMemo(() => {
+    return categorias.filter((c) =>
+      correspondeLike(c.nome, buscaTexto) && correspondeTriState(c.ativo, buscaAtivo)
+    )
+  }, [categorias, buscaTexto, buscaAtivo])
+
+  function limparBusca() { setBuscaTexto(''); setBuscaAtivo('todos') }
 
   const { register, handleSubmit, reset, setValue, formState: { errors, isDirty } } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
@@ -140,6 +152,41 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
 
       {aba === 'grade' && (
         <div className="overflow-auto flex-1">
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-slate-50 border-b border-slate-200">
+            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Nome</Label>
+              <div className="relative">
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Ex: bebida"
+                  value={buscaTexto}
+                  onChange={(e) => setBuscaTexto(e.target.value)}
+                  className="h-8 pl-7 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Ativa</Label>
+              <select
+                value={buscaAtivo}
+                onChange={(e) => setBuscaAtivo(e.target.value as FiltroTriState)}
+                className="h-8 px-2 text-sm border border-slate-300 rounded-md bg-white text-slate-700"
+              >
+                <option value="todos">Todas</option>
+                <option value="sim">Ativa</option>
+                <option value="nao">Inativa</option>
+              </select>
+            </div>
+            <button
+              onClick={limparBusca}
+              className="h-8 px-3 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors"
+            >
+              Limpar filtros
+            </button>
+            <span className="text-xs text-slate-500 ml-auto">
+              <strong className="text-slate-700">{categoriasFiltradas.length}</strong> de {categorias.length} registro(s) encontrado(s)
+            </span>
+          </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-700 text-white text-[12px] uppercase tracking-wide">
@@ -150,7 +197,7 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
               </tr>
             </thead>
             <tbody>
-              {categorias.map((c, i) => {
+              {categoriasFiltradas.map((c, i) => {
                 const sel = linhaSelecionada === c.id
                 return (
                   <tr
@@ -210,7 +257,7 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
       )}
 
       <div className="flex items-center justify-between px-4 py-1.5 bg-slate-800 text-[11px] text-slate-400">
-        <span>{aba === 'grade' ? `${categorias.length} registro(s)${linhaSelecionada ? ' • 1 selecionado' : ''}` : editando ? `Editando: ${editando.id.slice(0,8)}...` : 'Novo registro'}</span>
+        <span>{aba === 'grade' ? `${categoriasFiltradas.length} de ${categorias.length} registro(s)${linhaSelecionada ? ' • 1 selecionado' : ''}` : editando ? `Editando: ${editando.id.slice(0,8)}...` : 'Novo registro'}</span>
         <span>{salvando ? '💾 Salvando...' : 'Pronto'}</span>
       </div>
     </div>

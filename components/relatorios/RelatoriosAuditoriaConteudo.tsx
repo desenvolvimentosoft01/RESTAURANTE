@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 
-import { X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 
+import { correspondeLike } from '@/lib/busca'
 import { FiltroRelatorio } from './FiltroRelatorio'
+import { Input } from '@/components/ui/input'
 import type { Auditoria } from '@/types/database'
 
 const ACAO_LABEL: Record<string, { label: string; cor: string }> = {
@@ -27,6 +29,7 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
   const [fim, setFim] = useState(fimPeriodo)
   const [filtroTela, setFiltroTela] = useState('todas')
   const [filtroAcao, setFiltroAcao] = useState('todas')
+  const [buscaTexto, setBuscaTexto] = useState('')
   const [detalhe, setDetalhe] = useState<Auditoria | null>(null)
 
   const telas = Array.from(new Set(registros.map((r) => r.tela))).sort()
@@ -34,6 +37,11 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
   const filtrados = registros.filter((r) => {
     if (filtroTela !== 'todas' && r.tela !== filtroTela) return false
     if (filtroAcao !== 'todas' && r.acao !== filtroAcao) return false
+    if (buscaTexto &&
+      !correspondeLike(r.usuario_email, buscaTexto) &&
+      !correspondeLike(r.tabela, buscaTexto) &&
+      !correspondeLike(r.registro_id, buscaTexto)
+    ) return false
     return true
   })
 
@@ -61,6 +69,18 @@ export function RelatoriosAuditoriaConteudo({ registros, inicioPeriodo, fimPerio
             <option value="todas">Todas as ações</option>
             {Object.entries(ACAO_LABEL).map(([v, a]) => <option key={v} value={v}>{a.label}</option>)}
           </select>
+        </div>
+        <div className="flex flex-col gap-1 self-end min-w-[220px]">
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Usuário / Tabela / Registro</span>
+          <div className="relative">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Pesquisar..."
+              value={buscaTexto}
+              onChange={(e) => setBuscaTexto(e.target.value)}
+              className="h-8 pl-7 text-sm"
+            />
+          </div>
         </div>
       </FiltroRelatorio>
 

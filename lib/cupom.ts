@@ -98,7 +98,12 @@ export function imprimirCupom(pedido: Omit<Pedido, 'itens'> & { itens?: ItemCupo
 </body>
 </html>`
 
-  const janela = window.open('', '_blank', 'width=380,height=640')
+  const largura = 380
+  const altura = 640
+  const left = Math.max(0, window.screenX + (window.outerWidth - largura) / 2)
+  const top = Math.max(0, window.screenY + (window.outerHeight - altura) / 2)
+
+  const janela = window.open('', '_blank', `width=${largura},height=${altura},left=${left},top=${top}`)
   if (!janela) return
   janela.document.write(html)
   janela.document.close()

@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 
 import { formatarDataCurta, formatarMoeda } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -79,6 +80,7 @@ export function FinanceiroConteudo() {
     const supabase = createClient()
     const { error } = await supabase.from('transacoes').delete().eq('id', id)
     if (error) { toast.error('Erro ao excluir'); return }
+    registrarAuditoria({ tela: 'Financeiro', acao: 'exclusao', tabela: 'transacoes', registroId: id, antes: { descricao } })
     toast.success('Lançamento excluído')
     carregarDados()
   }

@@ -10,6 +10,7 @@ import { Eraser, FileText, FilePlus, List, Pencil, Save, Trash2, X } from 'lucid
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -54,11 +55,20 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
   async function onSubmit(data: FormOutput) {
     setSalvando(true)
     const supabase = createClient()
-    const { error } = editando
-      ? await supabase.from('categorias').update(data).eq('id', editando.id)
-      : await supabase.from('categorias').insert(data)
-    setSalvando(false)
-    if (error) { toast.error('Erro ao salvar'); return }
+    if (editando) {
+      const { error } = await supabase.from('categorias').update(data).eq('id', editando.id)
+      setSalvando(false)
+      if (error) { toast.error('Erro ao salvar'); return }
+      registrarAuditoria({
+        tela: 'Categorias', acao: 'edicao', tabela: 'categorias', registroId: editando.id,
+        antes: editando as unknown as Record<string, unknown>, depois: data as unknown as Record<string, unknown>,
+      })
+    } else {
+      const { data: nova, error } = await supabase.from('categorias').insert(data).select().single()
+      setSalvando(false)
+      if (error) { toast.error('Erro ao salvar'); return }
+      if (nova) registrarAuditoria({ tela: 'Categorias', acao: 'cadastro', tabela: 'categorias', registroId: nova.id, depois: data as unknown as Record<string, unknown> })
+    }
     toast.success(editando ? 'Categoria atualizada!' : 'Categoria cadastrada!')
     cancelar()
     router.refresh()
@@ -80,6 +90,7 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
       if (!inativar) return
       const { error } = await supabase.from('categorias').update({ ativo: false }).eq('id', id)
       if (error) { toast.error('Erro ao inativar'); return }
+      registrarAuditoria({ tela: 'Categorias', acao: 'inativacao', tabela: 'categorias', registroId: id, antes: { ativo: true }, depois: { ativo: false } })
       toast.success('Categoria inativada')
       if (linhaSelecionada === id) cancelar()
       router.refresh()
@@ -88,6 +99,7 @@ export function TelaCategorias({ categorias }: { categorias: Categoria[] }) {
 
     const { error } = await supabase.from('categorias').delete().eq('id', id)
     if (error) { toast.error('Erro ao excluir'); return }
+    registrarAuditoria({ tela: 'Categorias', acao: 'exclusao', tabela: 'categorias', registroId: id, antes: { nome } })
     toast.success('Categoria excluída')
     if (linhaSelecionada === id) cancelar()
     router.refresh()

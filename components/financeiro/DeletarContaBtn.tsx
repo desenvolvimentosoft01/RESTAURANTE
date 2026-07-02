@@ -7,6 +7,7 @@ import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -25,6 +26,7 @@ export function DeletarContaBtn({ id, descricao }: { id: string; descricao: stri
     setDeletando(false)
     setAberto(false)
     if (error) { toast.error('Erro ao deletar'); return }
+    registrarAuditoria({ tela: 'Financeiro/Contas', acao: 'exclusao', tabela: 'contas', registroId: id, antes: { descricao } })
     toast.success('Conta removida')
     router.refresh()
   }

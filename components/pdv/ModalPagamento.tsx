@@ -78,7 +78,8 @@ export function ModalPagamento({ aberto, onFechar }: Props) {
       const { error: errItens } = await supabase.from('itens_pedido').insert(itensPedido)
       if (errItens) throw errItens
 
-      await supabase.rpc('baixar_estoque_venda', { pedido_id: pedido.id })
+      const { error: errBaixa } = await supabase.rpc('baixar_estoque_venda', { pedido_id: pedido.id })
+      if (errBaixa) throw errBaixa
 
       await supabase.from('transacoes').insert({
         tipo: 'entrada',

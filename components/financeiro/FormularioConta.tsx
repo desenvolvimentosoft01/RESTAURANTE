@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -53,10 +54,15 @@ export function FormularioConta({ conta }: { conta?: Conta }) {
     if (editando) {
       const { error } = await supabase.from('contas').update(data).eq('id', conta.id)
       if (error) { toast.error('Erro ao salvar'); return }
+      registrarAuditoria({
+        tela: 'Financeiro/Contas', acao: 'edicao', tabela: 'contas', registroId: conta.id,
+        antes: conta as unknown as Record<string, unknown>, depois: data as unknown as Record<string, unknown>,
+      })
       toast.success('Conta atualizada!')
     } else {
-      const { error } = await supabase.from('contas').insert(data)
+      const { data: nova, error } = await supabase.from('contas').insert(data).select().single()
       if (error) { toast.error('Erro ao cadastrar'); return }
+      if (nova) registrarAuditoria({ tela: 'Financeiro/Contas', acao: 'cadastro', tabela: 'contas', registroId: nova.id, depois: data as unknown as Record<string, unknown> })
       toast.success('Conta cadastrada!')
     }
     router.push('/financeiro/contas')

@@ -56,6 +56,7 @@ const menu: Item[] = [
       { href: '/relatorios/contas',   label: 'Contas',       icone: '📋' },
       { href: '/produtos/relatorios', label: 'Produtos',     icone: '🍽️' },
       { href: '/financeiro/relatorios', label: 'Financeiro', icone: '📈' },
+      { href: '/relatorios/auditoria', label: 'Auditoria',   icone: '🔎' },
     ],
   },
 ]

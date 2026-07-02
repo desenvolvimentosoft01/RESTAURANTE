@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -61,14 +62,16 @@ export function FormularioDespesa({ onSalvo }: Props) {
     setSalvando(true)
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('transacoes').insert({
-        tipo: 'saida',
+      const registro = {
+        tipo: 'saida' as const,
         categoria: dados.categoria as CategoriaFinanceira,
         descricao: dados.descricao,
         valor: Number(dados.valor),
         data_competencia: dados.data_competencia,
-      })
+      }
+      const { data: nova, error } = await supabase.from('transacoes').insert(registro).select().single()
       if (error) throw error
+      if (nova) registrarAuditoria({ tela: 'Financeiro', acao: 'cadastro', tabela: 'transacoes', registroId: nova.id, depois: registro })
       toast.success('Despesa registrada')
       reset({ data_competencia: new Date().toISOString().split('T')[0] })
       setAberto(false)

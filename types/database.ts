@@ -1,4 +1,6 @@
 export type TipoMovimentacao = 'entrada' | 'saida' | 'ajuste'
+export type UnidadeMedida = 'UN' | 'KG' | 'G' | 'L' | 'ML' | 'PC' | 'CX' | 'FT'
+export type AcaoAuditoria = 'cadastro' | 'edicao' | 'exclusao' | 'inativacao' | 'ativacao' | 'ajuste_estoque'
 export type OrigemPedido = 'balcao' | 'ifood'
 export type StatusPedido = 'pendente' | 'confirmado' | 'em_preparo' | 'pronto' | 'entregue' | 'cancelado'
 export type FormaPagamento = 'dinheiro' | 'credito' | 'debito' | 'pix' | 'ifood'
@@ -34,6 +36,7 @@ export interface Produto {
   controla_estoque: boolean
   estoque_atual: number
   estoque_minimo: number
+  unidade_medida: UnidadeMedida
   categoria?: Categoria
 }
 
@@ -132,6 +135,21 @@ export interface Ingrediente {
   quantidade_atual: number
   quantidade_minima: number
   preco_custo: number
+}
+
+export interface Auditoria {
+  id: string
+  usuario_id: string | null
+  usuario_email: string | null
+  tela: string
+  acao: AcaoAuditoria
+  tabela: string
+  registro_id: string | null
+  dados_antes: Record<string, unknown> | null
+  dados_depois: Record<string, unknown> | null
+  ip: string | null
+  user_agent: string | null
+  created_at: string
 }
 
 export interface AlertaEstoque {

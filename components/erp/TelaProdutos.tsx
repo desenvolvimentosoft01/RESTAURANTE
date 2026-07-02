@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 
 import { formatarMoeda } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { BarraFerramentas } from '@/components/erp/BarraFerramentas'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -18,18 +19,33 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import type { Produto, Categoria } from '@/types/database'
+import type { Produto, Categoria, UnidadeMedida } from '@/types/database'
+
+const UNIDADES: { valor: UnidadeMedida; label: string }[] = [
+  { valor: 'UN', label: 'Unidade (UN)' },
+  { valor: 'KG', label: 'Quilograma (KG)' },
+  { valor: 'G', label: 'Grama (G)' },
+  { valor: 'L', label: 'Litro (L)' },
+  { valor: 'ML', label: 'Mililitro (ML)' },
+  { valor: 'PC', label: 'Pacote (PC)' },
+  { valor: 'CX', label: 'Caixa (CX)' },
+  { valor: 'FT', label: 'Fardo (FT)' },
+]
+
+// Unidades fracionadas (peso/volume) aceitam estoque decimal; as demais são sempre inteiras.
+const UNIDADES_FRACIONADAS: UnidadeMedida[] = ['KG', 'G', 'L', 'ML']
 
 const schema = z.object({
   nome: z.string().min(1, 'Nome obrigatório'),
   descricao: z.string().optional(),
   categoria_id: z.string().min(1, 'Categoria obrigatória'),
   preco: z.coerce.number().min(0.01, 'Preço obrigatório'),
+  unidade_medida: z.enum(['UN', 'KG', 'G', 'L', 'ML', 'PC', 'CX', 'FT']),
   ativo: z.boolean(),
   disponivel_ifood: z.boolean(),
   controla_estoque: z.boolean(),
-  estoque_atual: z.coerce.number().int().min(0),
-  estoque_minimo: z.coerce.number().int().min(0),
+  estoque_atual: z.coerce.number().min(0),
+  estoque_minimo: z.coerce.number().min(0),
 })
 
 type FormInput = z.input<typeof schema>
@@ -38,6 +54,7 @@ type FormOutput = z.output<typeof schema>
 const FORM_VAZIO: FormInput = {
   nome: '', descricao: '', categoria_id: '',
   preco: '' as unknown as number,
+  unidade_medida: 'UN',
   ativo: true, disponivel_ifood: false,
   controla_estoque: false, estoque_atual: 0, estoque_minimo: 0,
 }
@@ -59,6 +76,8 @@ export function TelaProdutos({ produtos, categorias }: Props) {
   })
 
   const controlaEstoque = watch('controla_estoque')
+  const unidadeMedida = watch('unidade_medida')
+  const passoEstoque = UNIDADES_FRACIONADAS.includes(unidadeMedida) ? '0.001' : '1'
 
   const carregarProduto = useCallback((p: Produto) => {
     setProdutoEditando(p)
@@ -68,6 +87,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       descricao: p.descricao ?? '',
       categoria_id: p.categoria_id,
       preco: p.preco,
+      unidade_medida: p.unidade_medida,
       ativo: p.ativo,
       disponivel_ifood: p.disponivel_ifood,
       controla_estoque: p.controla_estoque,
@@ -102,9 +122,22 @@ export function TelaProdutos({ produtos, categorias }: Props) {
     if (produtoEditando) {
       const { error } = await supabase.from('produtos').update(data).eq('id', produtoEditando.id)
       erro = error
+      if (!error) {
+        registrarAuditoria({
+          tela: 'Produtos', acao: 'edicao', tabela: 'produtos', registroId: produtoEditando.id,
+          antes: produtoEditando as unknown as Record<string, unknown>,
+          depois: data as unknown as Record<string, unknown>,
+        })
+      }
     } else {
-      const { error } = await supabase.from('produtos').insert(data)
+      const { data: novo, error } = await supabase.from('produtos').insert(data).select().single()
       erro = error
+      if (!error && novo) {
+        registrarAuditoria({
+          tela: 'Produtos', acao: 'cadastro', tabela: 'produtos', registroId: novo.id,
+          depois: data as unknown as Record<string, unknown>,
+        })
+      }
     }
     setSalvando(false)
     if (erro) { toast.error('Erro ao salvar produto'); return }
@@ -132,6 +165,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
       if (!inativar) return
       const { error } = await supabase.from('produtos').update({ ativo: false }).eq('id', id)
       if (error) { toast.error('Erro ao inativar'); return }
+      registrarAuditoria({ tela: 'Produtos', acao: 'inativacao', tabela: 'produtos', registroId: id, antes: { ativo: true }, depois: { ativo: false } })
       toast.success('Produto inativado do mix')
       if (linhaSelecionada === id) cancelar()
       router.refresh()
@@ -140,6 +174,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
 
     const { error } = await supabase.from('produtos').delete().eq('id', id)
     if (error) { toast.error('Erro ao excluir'); return }
+    registrarAuditoria({ tela: 'Produtos', acao: 'exclusao', tabela: 'produtos', registroId: id, antes: { nome } })
     toast.success('Produto excluído')
     if (linhaSelecionada === id) cancelar()
     router.refresh()
@@ -235,7 +270,7 @@ export function TelaProdutos({ produtos, categorias }: Props) {
                       <td className="px-4 py-2.5 text-right font-bold text-slate-800">{formatarMoeda(p.preco)}</td>
                       <td className="px-4 py-2.5 text-center">
                         {p.controla_estoque
-                          ? <span className={`font-bold ${alerta ? 'text-red-600' : 'text-slate-700'}`}>{p.estoque_atual}{alerta && ' ⚠'}</span>
+                          ? <span className={`font-bold ${alerta ? 'text-red-600' : 'text-slate-700'}`}>{p.estoque_atual} {p.unidade_medida}{alerta && ' ⚠'}</span>
                           : <span className="text-slate-300 text-[11px]">—</span>
                         }
                       </td>
@@ -304,6 +339,26 @@ export function TelaProdutos({ produtos, categorias }: Props) {
               </div>
             </div>
 
+            {/* Linha 1b — Unidade de medida */}
+            <div className="grid grid-cols-12 gap-4 items-start">
+              <div className="col-span-4 space-y-1.5">
+                <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Unidade de Medida *</Label>
+                <Select
+                  defaultValue={produtoEditando?.unidade_medida ?? 'UN'}
+                  key={`un-${produtoEditando?.id ?? 'novo'}`}
+                  onValueChange={(v) => setValue('unidade_medida', v as UnidadeMedida)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UNIDADES.map((u) => <SelectItem key={u.valor} value={u.valor}>{u.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-slate-400">Ex: KG permite vender/estocar em peso fracionado (0,750 kg).</p>
+              </div>
+            </div>
+
             {/* Linha 2 */}
             <div className="space-y-1.5">
               <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Descrição</Label>
@@ -349,12 +404,12 @@ export function TelaProdutos({ produtos, categorias }: Props) {
             {controlaEstoque && (
               <div className="grid grid-cols-3 gap-4 bg-amber-50 rounded-lg border border-amber-200 p-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Atual</Label>
-                  <Input type="number" min="0" {...register('estoque_atual')} className="h-9 bg-white" />
+                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Atual ({unidadeMedida})</Label>
+                  <Input type="number" min="0" step={passoEstoque} {...register('estoque_atual')} className="h-9 bg-white" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Mínimo</Label>
-                  <Input type="number" min="0" {...register('estoque_minimo')} className="h-9 bg-white" />
+                  <Label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Estoque Mínimo ({unidadeMedida})</Label>
+                  <Input type="number" min="0" step={passoEstoque} {...register('estoque_minimo')} className="h-9 bg-white" />
                 </div>
                 <div className="flex items-end pb-0.5">
                   <p className="text-[11px] text-amber-700">

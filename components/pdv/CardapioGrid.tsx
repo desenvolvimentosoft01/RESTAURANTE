@@ -4,7 +4,13 @@ import { useState } from 'react'
 
 import { cn, formatarMoeda } from '@/lib/utils'
 import { useCarrinho } from '@/hooks/useCarrinho'
-import type { Categoria, Produto } from '@/types/database'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import type { Categoria, Produto, UnidadeMedida } from '@/types/database'
+
+const UNIDADES_FRACIONADAS: UnidadeMedida[] = ['KG', 'G', 'L', 'ML']
 
 interface Props {
   produtos: Produto[]
@@ -13,11 +19,30 @@ interface Props {
 
 export function CardapioGrid({ produtos, categorias }: Props) {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null)
+  const [produtoPesando, setProdutoPesando] = useState<Produto | null>(null)
+  const [peso, setPeso] = useState('')
   const adicionarItem = useCarrinho((s) => s.adicionarItem)
 
   const produtosFiltrados = categoriaSelecionada
     ? produtos.filter((p) => p.categoria_id === categoriaSelecionada)
     : produtos
+
+  function clicarProduto(produto: Produto) {
+    if (UNIDADES_FRACIONADAS.includes(produto.unidade_medida)) {
+      setProdutoPesando(produto)
+      setPeso('')
+      return
+    }
+    adicionarItem(produto)
+  }
+
+  function confirmarPeso() {
+    const qtd = Number(peso.replace(',', '.'))
+    if (!produtoPesando || !qtd || qtd <= 0) return
+    adicionarItem(produtoPesando, qtd)
+    setProdutoPesando(null)
+    setPeso('')
+  }
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -55,7 +80,7 @@ export function CardapioGrid({ produtos, categorias }: Props) {
         {produtosFiltrados.map((produto) => (
           <button
             key={produto.id}
-            onClick={() => adicionarItem(produto)}
+            onClick={() => clicarProduto(produto)}
             className="text-left border border-slate-200 rounded-xl p-4 hover:bg-amber-50 hover:border-amber-400 hover:shadow-md transition-all bg-white active:scale-[0.98] group"
           >
             <p className="font-semibold text-slate-800 text-sm leading-tight group-hover:text-amber-700 transition-colors">
@@ -64,10 +89,13 @@ export function CardapioGrid({ produtos, categorias }: Props) {
             {produto.descricao && (
               <p className="text-xs text-slate-500 mt-1.5 line-clamp-2">{produto.descricao}</p>
             )}
-            <p className="text-slate-900 font-bold mt-2.5 text-base">{formatarMoeda(produto.preco)}</p>
+            <p className="text-slate-900 font-bold mt-2.5 text-base">
+              {formatarMoeda(produto.preco)}
+              {produto.unidade_medida !== 'UN' && <span className="text-xs font-normal text-slate-400">/{produto.unidade_medida}</span>}
+            </p>
             {produto.controla_estoque && (
               <p className={`text-[10px] mt-1 font-medium ${produto.estoque_atual <= produto.estoque_minimo ? 'text-red-500' : 'text-slate-400'}`}>
-                Estoque: {produto.estoque_atual}
+                Estoque: {produto.estoque_atual} {produto.unidade_medida}
               </p>
             )}
           </button>
@@ -78,6 +106,37 @@ export function CardapioGrid({ produtos, categorias }: Props) {
           </p>
         )}
       </div>
+
+      <Dialog open={!!produtoPesando} onOpenChange={(open) => !open && setProdutoPesando(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>{produtoPesando?.nome}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="peso">Quantidade ({produtoPesando?.unidade_medida})</Label>
+            <Input
+              id="peso"
+              type="number"
+              step="0.001"
+              min="0"
+              autoFocus
+              placeholder="Ex: 0,750"
+              value={peso}
+              onChange={(e) => setPeso(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && confirmarPeso()}
+            />
+            {produtoPesando && !!Number(peso.replace(',', '.')) && (
+              <p className="text-sm text-slate-500">
+                Subtotal: <strong>{formatarMoeda(produtoPesando.preco * Number(peso.replace(',', '.')))}</strong>
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProdutoPesando(null)}>Cancelar</Button>
+            <Button onClick={confirmarPeso}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

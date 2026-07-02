@@ -7,25 +7,31 @@ import { SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { createClient } from '@/lib/supabase/client'
+import { registrarAuditoria } from '@/lib/auditoria'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { UnidadeMedida } from '@/types/database'
+
+const UNIDADES_FRACIONADAS: UnidadeMedida[] = ['KG', 'G', 'L', 'ML']
 
 interface Props {
   produtoId: string
   nomeProduto: string
   estoqueAtual: number
+  unidadeMedida: UnidadeMedida
 }
 
-export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual }: Props) {
+export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual, unidadeMedida }: Props) {
   const [aberto, setAberto] = useState(false)
   const [tipo, setTipo] = useState<'entrada' | 'saida' | 'ajuste'>('entrada')
   const [quantidade, setQuantidade] = useState(1)
   const [motivo, setMotivo] = useState('')
   const [salvando, setSalvando] = useState(false)
   const router = useRouter()
+  const passo = UNIDADES_FRACIONADAS.includes(unidadeMedida) ? '0.001' : '1'
 
   async function salvar() {
     if (!quantidade || quantidade <= 0) {
@@ -57,6 +63,12 @@ export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual }: Props
       return
     }
 
+    registrarAuditoria({
+      tela: 'Estoque', acao: 'ajuste_estoque', tabela: 'produtos', registroId: produtoId,
+      antes: { estoque_atual: estoqueAtual },
+      depois: { estoque_atual: novoEstoque, tipo, quantidade, motivo: motivo || null },
+    })
+
     toast.success('Estoque atualizado!')
     setAberto(false)
     setQuantidade(1)
@@ -80,7 +92,7 @@ export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual }: Props
           <div className="space-y-4 py-2">
             <div>
               <p className="text-sm text-slate-500">Produto: <strong>{nomeProduto}</strong></p>
-              <p className="text-sm text-slate-500">Estoque atual: <strong>{estoqueAtual} unidades</strong></p>
+              <p className="text-sm text-slate-500">Estoque atual: <strong>{estoqueAtual} {unidadeMedida}</strong></p>
             </div>
 
             <div className="space-y-2">
@@ -102,6 +114,7 @@ export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual }: Props
               <Input
                 type="number"
                 min="0"
+                step={passo}
                 value={quantidade}
                 onChange={(e) => setQuantidade(Number(e.target.value))}
               />
@@ -119,7 +132,7 @@ export function AjusteEstoqueBtn({ produtoId, nomeProduto, estoqueAtual }: Props
             {tipo !== 'ajuste' && (
               <p className="text-xs text-slate-400 bg-slate-50 rounded-lg p-2">
                 Novo estoque: <strong className="text-slate-700">
-                  {tipo === 'entrada' ? estoqueAtual + quantidade : Math.max(estoqueAtual - quantidade, 0)} unidades
+                  {tipo === 'entrada' ? estoqueAtual + quantidade : Math.max(estoqueAtual - quantidade, 0)} {unidadeMedida}
                 </strong>
               </p>
             )}

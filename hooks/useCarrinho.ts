@@ -11,7 +11,7 @@ export interface ItemCarrinho {
 
 interface CarrinhoStore {
   itens: ItemCarrinho[]
-  adicionarItem: (produto: Produto) => void
+  adicionarItem: (produto: Produto, quantidade?: number) => void
   removerItem: (produtoId: string) => void
   alterarQuantidade: (produtoId: string, quantidade: number) => void
   alterarObservacao: (produtoId: string, observacao: string) => void
@@ -23,17 +23,19 @@ interface CarrinhoStore {
 export const useCarrinho = create<CarrinhoStore>((set, get) => ({
   itens: [],
 
-  adicionarItem: (produto) => {
+  // Para produtos fracionados (KG/G/L/ML), `quantidade` é informada explicitamente
+  // (peso pesado na balança) em vez de incrementar +1 a cada clique.
+  adicionarItem: (produto, quantidade = 1) => {
     set((state) => {
       const existente = state.itens.find((i) => i.produto.id === produto.id)
       if (existente) {
         return {
           itens: state.itens.map((i) =>
-            i.produto.id === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i
+            i.produto.id === produto.id ? { ...i, quantidade: i.quantidade + quantidade } : i
           ),
         }
       }
-      return { itens: [...state.itens, { produto, quantidade: 1, observacao: '' }] }
+      return { itens: [...state.itens, { produto, quantidade, observacao: '' }] }
     })
   },
 

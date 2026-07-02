@@ -7,5 +7,7 @@
 
 DO $$ BEGIN
   ALTER TABLE public.categorias ADD CONSTRAINT categorias_nome_key UNIQUE (nome);
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;  -- constraint já existe
+  WHEN duplicate_table THEN NULL;   -- índice único subjacente já existe (mesmo nome)
 END $$;

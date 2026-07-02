@@ -5,7 +5,14 @@ import { cn } from "@/lib/utils"
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentProps<"textarea">
->(({ className, ...props }, ref) => {
+>(({ className, onChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { selectionStart, selectionEnd } = e.target
+    e.target.value = e.target.value.toUpperCase()
+    e.target.setSelectionRange(selectionStart, selectionEnd)
+    onChange?.(e)
+  }
+
   return (
     <textarea
       className={cn(
@@ -13,6 +20,7 @@ const Textarea = React.forwardRef<
         className
       )}
       ref={ref}
+      onChange={handleChange}
       {...props}
     />
   )

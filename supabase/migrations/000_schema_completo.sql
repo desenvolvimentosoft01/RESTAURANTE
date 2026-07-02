@@ -7,7 +7,7 @@
 
 CREATE TABLE IF NOT EXISTS categorias (
   id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  nome   TEXT NOT NULL,
+  nome   TEXT NOT NULL UNIQUE,
   ativo  BOOLEAN NOT NULL DEFAULT true,
   ordem  INTEGER NOT NULL DEFAULT 0
 );
@@ -195,4 +195,4 @@ INSERT INTO categorias (nome, ordem) VALUES
   ('Entradas', 2),
   ('Bebidas', 3),
   ('Sobremesas', 4)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (nome) DO NOTHING;
